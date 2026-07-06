@@ -181,8 +181,7 @@ tbody td{padding:10px 12px;vertical-align:middle;white-space:nowrap}
 .btn-submit{background:var(--accent);color:#0d1117;border:none;border-radius:7px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer}
 .btn-submit:hover{background:#79c0ff}
 .form-hint{font-size:11px;color:var(--text3)}
-.btn-ai{background:linear-gradient(135deg,#3a1f6e,#5a3a9e);border:none;color:#d2a8ff;padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;font-weight:600}
-.btn-ai:hover{opacity:.85}
+
 
 /* ── SETTINGS PAGE ─────────────────── */
 .settings-wrap{max-width:640px}
@@ -203,17 +202,6 @@ tbody td{padding:10px 12px;vertical-align:middle;white-space:nowrap}
 .rc .rcn{font-size:14px;font-weight:600;margin-bottom:3px}
 .rc .rcd{font-size:11px;color:var(--text2);margin-bottom:8px}
 .rc .rcs{display:flex;justify-content:space-between;align-items:center}
-
-/* ── AI MODAL ─────────────────── */
-#ai-modal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;display:none;align-items:center;justify-content:center}
-#ai-modal.open{display:flex}
-.aim-box{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:28px;width:540px;max-height:80vh;overflow-y:auto}
-.aim-box h3{font-size:15px;font-weight:700;margin-bottom:4px}
-.aim-box p{font-size:12px;color:var(--text2);margin-bottom:12px}
-.aim-prompt{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:11px;color:var(--text2);white-space:pre-wrap;max-height:280px;overflow-y:auto;margin-bottom:14px}
-.aim-btns{display:flex;gap:8px}
-.btn-copy{background:var(--accent);color:#0d1117;border:none;border-radius:7px;padding:9px 18px;font-size:13px;cursor:pointer;font-weight:700}
-.btn-cls{background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:7px;padding:9px 18px;font-size:13px;cursor:pointer}
 
 /* ── TOAST ─────────────────── */
 .toast{position:fixed;bottom:20px;right:20px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 18px;font-size:13px;z-index:3000;opacity:0;transform:translateY(6px);transition:all .25s;pointer-events:none}
@@ -349,18 +337,6 @@ tbody td{padding:10px 12px;vertical-align:middle;white-space:nowrap}
   </div>
 </div>
 
-<!-- AI MODAL -->
-<div id="ai-modal">
-  <div class="aim-box">
-    <h3>✨ AI 평가의견 초안 생성</h3>
-    <p>아래 프롬프트를 복사해서 Claude에 붙여넣으면 평가의견 초안을 받을 수 있습니다.</p>
-    <div class="aim-prompt" id="aim-text"></div>
-    <div class="aim-btns">
-      <button class="btn-copy" onclick="copyAiPrompt()">📋 복사</button>
-      <button class="btn-cls" onclick="closeAiModal()">닫기</button>
-    </div>
-  </div>
-</div>
 
 <div class="toast" id="toast"></div>
 
@@ -758,9 +734,8 @@ function renderDetail(idx) {
           <button class="rbtn pass ${myR.result==='합격'?'sel':''}" onclick="setMyResult('합격',${idx})">✅ 합격</button>
           <button class="rbtn fail ${myR.result==='불합격'?'sel':''}" onclick="setMyResult('불합격',${idx})">❌ 불합격</button>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="margin-bottom:6px">
           <span style="font-size:11px;color:var(--text2)">평가의견</span>
-          <button class="btn-ai" onclick="openAiModal(${idx})">✨ AI 초안</button>
         </div>
         <textarea class="eval-ta" id="ta-${idx}" placeholder="발표를 청취 후 평가의견을 작성해 주세요...">${myR.comment||''}</textarea>
         <div class="form-row">
@@ -885,45 +860,6 @@ function exportJSON() {
   a.download = `직무급심의_${currentUser}_${new Date().toISOString().slice(0,10)}.json`;
   a.click();
 }
-
-// ═══════════════════════════════════════════
-//  AI MODAL
-// ═══════════════════════════════════════════
-function openAiModal(idx) {
-  const c = C[idx];
-  const fbStr = c.fb.filter(f=>f.v!==null).map(f=>`${f.l}: ${f.v}%`).join(' / ');
-  const revStr = c.reviewers.map(r=>`[${r.role} / ${r.result}] ${r.comment.substring(0,200)}`).join('\n\n');
-  const prompt = `당신은 기업 인사 전문가입니다. 다음 직원의 직무급 심의 자료를 바탕으로 심의위원 평가의견을 한국어 200~300자로 작성해 주세요.
-
-■ 대상자: ${c.name} (${c.dept} · ${c.div})
-■ 현재 직무급: ${c.cur||'없음'} → 지원 직무급: ${c.tar}
-■ 특이사항: ${c.note||'없음'}
-■ 입사일: ${c.joinDate} (재직 ${tenure(c.joinDate).str})
-
-■ 3개년 인사평가
-  - 2023년: ${c.e23} / 2024년: ${c.e24} / 2025년: ${c.e25}
-
-■ 다면평가 점수
-  ${fbStr||'데이터 없음'}
-
-■ 사전 검토자 의견 요약
-${revStr}
-
-위 내용을 바탕으로:
-1. 핵심 강점 2~3가지
-2. ${c.tar} 직무급 적합성 평가
-3. 합격/불합격 권고 및 근거
-
-를 포함한 심의위원 평가의견을 간결하게 작성해 주세요.`;
-
-  document.getElementById('aim-text').textContent = prompt;
-  document.getElementById('ai-modal').classList.add('open');
-}
-function copyAiPrompt() {
-  navigator.clipboard.writeText(document.getElementById('aim-text').textContent);
-  showToast('프롬프트가 복사되었습니다','ok');
-}
-function closeAiModal() { document.getElementById('ai-modal').classList.remove('open'); }
 
 // ═══════════════════════════════════════════
 //  TOAST
