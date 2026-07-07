@@ -1180,24 +1180,84 @@ function renderSettings() {
     <div class="field"><label>심의위원 ${i+1}</label>
     <input type="text" id="cm${i}" value="${committee[i]||''}"></div>`).join('');
   document.getElementById('sheets-url').value = sheetsUrl;
-  document.getElementById('apps-script-code').textContent = `function doPost(e) {
-  var data = JSON.parse(e.postData.contents);
+  document.getElementById('apps-script-code').textContent = `// ★ 전체 교체 후 '새 배포' → 버전 업데이트로 재배포 필요
+
+var HEADERS = ['타임스탬프','심의위원','사번','이름','소속','현재직무급','지원직무급',
+               '결과','평가의견','심의기수',
+               '역량_학습','역량_소통','역량_협력','역량_실행','역량_전문성',
+               '역량_문제해결','역량_마인드셋','역량_전파코칭'];
+
+function getSheet() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('심의결과') || ss.insertSheet('심의결과');
-
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(['타임스탬프','심의위원','사번','이름','소속',
-      '현재직무급','지원직무급','결과','평가의견','심의기수']);
-    sheet.getRange(1,1,1,10).setFontWeight('bold')
+    sheet.appendRow(HEADERS);
+    sheet.getRange(1,1,1,HEADERS.length).setFontWeight('bold')
       .setBackground('#1f3a5f').setFontColor('#ffffff');
+  } else {
+    // 기존 헤더에 새 컬럼 추가 (역량 컬럼 없으면 자동 추가)
+    var cur = sheet.getRange(1,1,1,sheet.getLastColumn()).getValues()[0];
+    HEADERS.forEach(function(h) {
+      if (cur.indexOf(h) === -1) { sheet.getRange(1, cur.length+1).setValue(h); cur.push(h); }
+    });
+  }
+  return sheet;
+}
+
+function doPost(e) {
+  var data = JSON.parse(e.postData.contents);
+  var sheet = getSheet();
+  var headers = sheet.getRange(1,1,1,sheet.getLastColumn()).getValues()[0];
+
+  // 같은 심의위원+사번 기존 행 덮어쓰기 (없으면 append)
+  var lastRow = sheet.getLastRow();
+  var cmCol = headers.indexOf('심의위원') + 1;
+  var idCol = headers.indexOf('사번') + 1;
+  var targetRow = -1;
+  if (lastRow > 1) {
+    var cmVals = sheet.getRange(2, cmCol, lastRow-1).getValues();
+    var idVals = sheet.getRange(2, idCol, lastRow-1).getValues();
+    for (var i = 0; i < cmVals.length; i++) {
+      if (cmVals[i][0] == data.심의위원 && String(idVals[i][0]) == String(data.사번)) {
+        targetRow = i + 2; break;
+      }
+    }
   }
 
-  sheet.appendRow([data.timestamp, data.심의위원, data.사번, data.이름,
-    data.소속, data.현재직무급, data.지원직무급,
-    data.결과, data.평가의견, data.심의기수]);
+  var row = headers.map(function(h) {
+    if (h === '타임스탬프') return data.timestamp || new Date().toISOString();
+    return data[h] !== undefined ? data[h] : '';
+  });
+
+  if (targetRow > 0) sheet.getRange(targetRow,1,1,row.length).setValues([row]);
+  else sheet.appendRow(row);
 
   return ContentService
-    .createTextOutput(JSON.stringify({status:'ok',name:data.이름}))
+    .createTextOutput(JSON.stringify({status:'ok', name:data.이름}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  var user = e.parameter.user;
+  var sheet = getSheet();
+  if (sheet.getLastRow() < 2)
+    return ContentService.createTextOutput(JSON.stringify({status:'ok',data:[]}))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  var all = sheet.getDataRange().getValues();
+  var headers = all[0];
+  var rows = all.slice(1).filter(function(r) {
+    return r[headers.indexOf('심의위원')] == user;
+  }).map(function(r) {
+    var obj = {};
+    headers.forEach(function(h,i){ obj[h] = r[i]; });
+    obj.timestamp = obj['타임스탬프'];
+    obj.사번 = String(obj['사번']);
+    return obj;
+  });
+
+  return ContentService
+    .createTextOutput(JSON.stringify({status:'ok', data:rows}))
     .setMimeType(ContentService.MimeType.JSON);
 }`;
 }
