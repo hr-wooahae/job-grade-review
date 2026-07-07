@@ -33,24 +33,23 @@ body{background:var(--bg);color:var(--text);font-family:'Malgun Gothic','Segoe U
 .btn-enter:not(:disabled):hover{background:#004F87}
 
 /* ── LAYOUT ─────────────────────── */
-header{position:sticky;top:0;z-index:100;background:var(--bg2);border-bottom:1px solid var(--border);height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-.hd-left{display:flex;align-items:center;gap:10px}
-.hd-logo{font-size:15px;font-weight:700;color:var(--text)}
-.hd-logo span{color:var(--accent)}
-.hd-badge{background:#E6F2FB;color:var(--accent);border:1px solid #99C8E8;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}
+header{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,#0068B0 0%,#004E8C 100%);border-bottom:none;height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;box-shadow:0 2px 8px rgba(0,78,140,.35)}
+.hd-left{display:flex;align-items:center;gap:12px}
+.hd-logo{font-size:15px;font-weight:700;color:#fff}
+.hd-logo span{color:rgba(255,255,255,.8)}
+.hd-badge{background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.28);font-size:11px;padding:2px 10px;border-radius:20px;font-weight:500}
 .hd-right{display:flex;align-items:center;gap:8px}
-.user-pill{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;display:flex;align-items:center;gap:6px;color:var(--text2)}
-.online-dot{width:7px;height:7px;border-radius:50%;background:#2E8B57}
-.hd-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px}
-.hd-btn:hover{color:var(--text);border-color:var(--border2);background:var(--bg4)}
-.app-body{display:flex;height:calc(100vh - 54px)}
+.user-pill{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:5px 12px;font-size:12px;display:flex;align-items:center;gap:6px;color:#fff}
+.online-dot{width:7px;height:7px;border-radius:50%;background:#7FE8CC}
+.hd-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;text-decoration:none;display:inline-flex;align-items:center}
+.hd-btn:hover{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.4);color:#fff}
+.app-body{display:flex;height:calc(100vh - 98px)}
 
-/* ── SIDEBAR ─────────────────────── */
-.sidebar{width:72px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:4px;flex-shrink:0}
-.nav-btn{width:44px;height:44px;border-radius:8px;border:none;background:transparent;color:var(--text2);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:9px;transition:.15s}
-.nav-btn:hover{background:var(--bg3);color:var(--text)}
-.nav-btn.active{background:#E6F2FB;color:var(--accent)}
-.nav-btn svg{width:18px;height:18px}
+/* ── TAB NAV ─────────────────────── */
+.tab-nav{background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:stretch;padding:0 24px;height:44px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.tab-btn{height:44px;padding:0 18px;border:none;border-bottom:3px solid transparent;background:none;color:var(--text2);font-size:14px;font-weight:400;cursor:pointer;white-space:nowrap;margin-bottom:-1px;transition:.15s;font-family:inherit}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:#0068B0;border-bottom-color:#0068B0;font-weight:600}
 
 /* ── MAIN ─────────────────────── */
 .main{flex:1;overflow-y:auto;padding:20px}
@@ -291,34 +290,20 @@ tbody td{padding:10px 12px;vertical-align:middle;white-space:nowrap}
   </div>
   <div class="hd-right">
     <div class="user-pill"><div class="online-dot" id="hd-dot"></div><span id="hd-user">-</span></div>
-    <button class="hd-btn" id="hd-btn-results" onclick="gotoView('results')">내 평가 현황</button>
-    <a href="results.html" target="_blank" id="hd-btn-dashboard" class="hd-btn" style="text-decoration:none;color:inherit;display:none">📊 결과 대시보드</a>
-    <button class="hd-btn" id="hd-btn-admin" onclick="gotoView('admin')" style="display:none;color:var(--red)">🔑 관리자</button>
-    <button class="hd-btn" id="hd-btn-settings" onclick="gotoView('settings')" style="display:none">⚙ 설정</button>
+    <a href="results.html" target="_blank" id="hd-btn-dashboard" class="hd-btn" style="display:none">📊 결과 대시보드</a>
     <button class="hd-btn" onclick="logout()">로그아웃</button>
   </div>
 </header>
 
+<!-- ── TAB NAV ─────────────────────── -->
+<nav class="tab-nav" id="tab-nav" style="display:none">
+  <button class="tab-btn active" id="tab-main" onclick="gotoView('main')">전체 현황</button>
+  <button class="tab-btn" id="tab-results" onclick="gotoView('results')">내 평가 현황</button>
+  <button class="tab-btn" id="tab-admin" onclick="gotoView('admin')" style="display:none">🔑 관리자</button>
+  <button class="tab-btn" id="tab-settings" onclick="gotoView('settings')" style="display:none">설정</button>
+</nav>
+
 <div class="app-body" id="app-body" style="display:none">
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-    <button class="nav-btn active" id="nav-main" onclick="gotoView('main')" title="전체 현황">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-      현황
-    </button>
-    <button class="nav-btn" id="nav-results" onclick="gotoView('results')" title="내 평가">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-      평가
-    </button>
-    <button class="nav-btn" id="nav-admin" onclick="gotoView('admin')" title="관리자" style="display:none;color:var(--red)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-      관리자
-    </button>
-    <button class="nav-btn" id="nav-settings" onclick="gotoView('settings')" title="설정" style="display:none">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-      설정
-    </button>
-  </div>
 
   <!-- MAIN -->
   <div class="main" id="main-view">
@@ -694,17 +679,19 @@ async function doLogin() {
   btn.textContent = '입장하기';
   document.getElementById('login').style.display='none';
   document.getElementById('app-header').style.display='flex';
+  document.getElementById('tab-nav').style.display='flex';
   document.getElementById('app-body').style.display='flex';
   document.getElementById('hd-user').textContent = currentUser;
   document.getElementById('hd-btn-dashboard').style.display='none';
-  document.getElementById('hd-btn-settings').style.display='none';
-  document.getElementById('nav-settings').style.display='none';
+  document.getElementById('tab-admin').style.display='none';
+  document.getElementById('tab-settings').style.display='none';
   gotoView('main');
 }
 function logout() {
   currentUser=null; openIdx=null; isAdmin=false; adminEditKey=null;
   document.getElementById('login').style.display='flex';
   document.getElementById('app-header').style.display='none';
+  document.getElementById('tab-nav').style.display='none';
   document.getElementById('app-body').style.display='none';
   document.querySelectorAll('.mbtn').forEach(b=>b.classList.remove('sel'));
   document.getElementById('login-btn').disabled=true;
@@ -714,12 +701,9 @@ function logout() {
   document.getElementById('admin-pw-row').style.display='none';
   document.getElementById('admin-pw-input').value='';
   document.getElementById('admin-pw-err').textContent='';
-  document.getElementById('hd-btn-admin').style.display='none';
-  document.getElementById('hd-btn-results').style.display='';
   document.getElementById('hd-btn-dashboard').style.display='none';
-  document.getElementById('hd-btn-settings').style.display='none';
-  document.getElementById('nav-admin').style.display='none';
-  document.getElementById('nav-settings').style.display='none';
+  document.getElementById('tab-admin').style.display='none';
+  document.getElementById('tab-settings').style.display='none';
   document.getElementById('hd-dot').style.background='var(--accent3)';
   initLogin();
 }
@@ -744,15 +728,13 @@ async function doAdminLogin() {
   currentUser = '관리자';
   document.getElementById('login').style.display='none';
   document.getElementById('app-header').style.display='flex';
+  document.getElementById('tab-nav').style.display='flex';
   document.getElementById('app-body').style.display='flex';
   document.getElementById('hd-user').textContent = '🔑 관리자';
   document.getElementById('hd-dot').style.background='#B83232';
-  document.getElementById('hd-btn-admin').style.display='';
-  document.getElementById('hd-btn-results').style.display='none';
   document.getElementById('hd-btn-dashboard').style.display='';
-  document.getElementById('hd-btn-settings').style.display='';
-  document.getElementById('nav-admin').style.display='flex';
-  document.getElementById('nav-settings').style.display='flex';
+  document.getElementById('tab-admin').style.display='';
+  document.getElementById('tab-settings').style.display='';
   await adminFetchAll();
   gotoView('admin');
 }
@@ -873,7 +855,7 @@ async function adminUnlock(safeKey, cid, cname, cdept, cmName, cur, tar) {
 function gotoView(v) {
   ['main','results','settings','admin'].forEach(k => {
     document.getElementById(k+'-view').style.display = k===v?'block':'none';
-    document.getElementById('nav-'+k)?.classList.toggle('active', k===v);
+    document.getElementById('tab-'+k)?.classList.toggle('active', k===v);
   });
   if(v==='main') { renderStats(); renderTable(); }
   else if(v==='results') renderResults();
