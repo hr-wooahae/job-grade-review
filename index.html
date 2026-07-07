@@ -1020,20 +1020,10 @@ function renderDetail(idx) {
         const allScored = scoredCount === COMPETENCIES.length;
 
         if(isLocked) {
-          const scoreRows = COMPETENCIES.map(comp => {
-            const sv = scores[comp.key];
-            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">
-              <span style="font-size:11px;font-weight:600;color:var(--text2)">${comp.label}</span>
-              ${sv ? `<span style="font-size:12px;font-weight:700;color:${SCORE_COLORS[sv]}">${sv}점 &nbsp;${SCORE_LABELS[sv]}</span>`
-                   : '<span style="font-size:11px;color:var(--text3)">-</span>'}
-            </div>`;
-          }).join('');
           return `
           <div class="eval-form">
             <h4>✏️ ${currentUser} 님의 평가 <span style="font-size:11px;color:#3fb950;font-weight:400;margin-left:6px">🔒 제출 완료</span></h4>
-            <div class="comp-section-hd">3. 공통역량 평가</div>
-            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px">${scoreRows}</div>
-            <div class="comp-section-hd" style="margin-top:14px">4. 직무역량 평가</div>
+            <div class="comp-section-hd">직무역량 평가</div>
             <div class="result-btns" style="pointer-events:none">
               <button class="rbtn pass ${myR.result==='합격'?'sel':''}" disabled>✅ 합격</button>
               <button class="rbtn fail ${myR.result==='불합격'?'sel':''}" disabled>❌ 불합격</button>
@@ -1046,27 +1036,10 @@ function renderDetail(idx) {
           </div>`;
         }
 
-        const compItems = COMPETENCIES.map(comp => {
-          const sv = scores[comp.key];
-          const btns = [5,4,3,2,1].map(v =>
-            `<button class="csb${sv===v?` sel-${v}`:''}" data-comp="${comp.key}" data-score="${v}"
-              onclick="setMyScore(${idx},'${comp.key}',${v})">${v}<br><span style="font-size:8px">${['','전혀','아니다','보통','그렇다','매우'][v]}</span></button>`
-          ).join('');
-          return `<div class="comp-item">
-            <div class="comp-item-top">
-              <span class="comp-item-label">${comp.label}</span>
-              <span class="comp-item-desc">${comp.desc}</span>
-            </div>
-            <div class="comp-score-row">${btns}</div>
-          </div>`;
-        }).join('');
-
         return `
         <div class="eval-form">
           <h4>✏️ ${currentUser} 님의 평가</h4>
-          <div class="comp-section-hd">3. 공통역량 평가 <span style="font-weight:400;color:${allScored?'#3fb950':'var(--accent)'}">(${scoredCount}/8 완료)</span></div>
-          ${compItems}
-          <div class="comp-section-hd" style="margin-top:14px">4. 직무역량 평가</div>
+          <div class="comp-section-hd">직무역량 평가</div>
           <div class="result-btns">
             <button class="rbtn pass ${myR.result==='합격'?'sel':''}" onclick="setMyResult('합격',${idx})">✅ 합격</button>
             <button class="rbtn fail ${myR.result==='불합격'?'sel':''}" onclick="setMyResult('불합격',${idx})">❌ 불합격</button>
@@ -1077,8 +1050,8 @@ function renderDetail(idx) {
           </div>
           <textarea class="eval-ta" id="ta-${idx}" placeholder="발표를 청취 후 평가의견을 작성해 주세요..." ${!myR.result?'disabled':''}>${myR.comment||''}</textarea>
           <div class="form-row">
-            <button class="btn-submit" onclick="submitReview(${idx})" ${!allScored||!myR.result?'disabled':''}>저장 · 제출</button>
-            <span class="form-hint">${!allScored?`공통역량 ${8-scoredCount}개 미완료`:!myR.result?'합격/불합격 미선택':'미제출'}</span>
+            <button class="btn-submit" onclick="submitReview(${idx})" ${!myR.result?'disabled':''}>저장 · 제출</button>
+            <span class="form-hint">${!myR.result?'합격/불합격 미선택':'미제출'}</span>
           </div>
         </div>`;
       })()}
@@ -1130,10 +1103,7 @@ function setMyScore(idx, compKey, score) {
 async function submitReview(idx) {
   const c = C[idx], key = `${currentUser}:${c.id}`;
   const comment = document.getElementById(`ta-${idx}`)?.value || '';
-  const scores = reviews[key]?.scores || {};
-  const missing = COMPETENCIES.filter(comp => !(scores[comp.key] >= 1));
-  if(missing.length > 0) { showToast(`공통역량 [${missing[0].label}] 항목을 평가해 주세요`, 'err'); return; }
-  if(!reviews[key]?.result) { showToast('직무역량 합격/불합격을 먼저 선택해 주세요','err'); return; }
+  if(!reviews[key]?.result) { showToast('합격/불합격을 먼저 선택해 주세요','err'); return; }
   reviews[key].comment = comment;
   reviews[key].timestamp = new Date().toISOString();
   saveState();
