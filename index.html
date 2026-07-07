@@ -210,6 +210,32 @@ tbody td{padding:10px 12px;vertical-align:middle;white-space:nowrap}
 .toast.show{opacity:1;transform:translateY(0)}
 .toast.ok{border-color:var(--accent3);color:var(--accent3)}
 .toast.err{border-color:var(--red);color:var(--red)}
+
+/* ── ADMIN ─────────────────── */
+#admin-login-area{margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+.admin-toggle-link{font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;text-decoration:underline;padding:0}
+.admin-toggle-link:hover{color:var(--text2)}
+.admin-pw-row{margin-top:10px;display:none}
+.admin-cand-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:14px;overflow:hidden}
+.admin-cand-hd{padding:10px 16px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.admin-cand-hd .acn{font-size:14px;font-weight:700}
+.admin-cand-hd .acd{font-size:11px;color:var(--text2)}
+.admin-rev-row{display:grid;grid-template-columns:150px 72px 1fr 64px;gap:10px;align-items:start;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px}
+.admin-rev-row:last-child{border-bottom:none}
+.admin-rev-row .arm-name{font-size:12px;font-weight:600;color:var(--text)}
+.admin-rev-row .arm-comment{font-size:12px;color:var(--text2);line-height:1.5;white-space:pre-wrap}
+.admin-edit-area{padding:14px 16px;background:#1a1f27;border-top:1px solid var(--border)}
+.admin-res-btns{display:flex;gap:8px;margin-bottom:10px}
+.admin-res-btn{padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:12px;font-weight:600}
+.admin-res-btn.sel-pass{border-color:#3fb950;color:#3fb950;background:#0d2818}
+.admin-res-btn.sel-fail{border-color:var(--red);color:var(--red);background:#2d0f0f}
+.admin-ta{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;padding:8px 10px;min-height:70px;resize:vertical;font-family:inherit;line-height:1.6;margin-bottom:8px}
+.admin-ta:focus{outline:none;border-color:var(--accent)}
+.admin-save-btn{background:var(--accent);color:#0d1117;border:none;border-radius:6px;padding:7px 18px;font-size:12px;font-weight:700;cursor:pointer}
+.admin-save-btn:hover{background:#79c0ff}
+.admin-cancel-btn{background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:6px;padding:7px 14px;font-size:12px;cursor:pointer;margin-left:6px}
+.btn-admin-edit{background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:5px;padding:4px 10px;font-size:11px;cursor:pointer;white-space:nowrap}
+.btn-admin-edit:hover{color:var(--accent);border-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -229,6 +255,16 @@ tbody td{padding:10px 12px;vertical-align:middle;white-space:nowrap}
       <div id="pw-err" style="font-size:11px;color:var(--red);margin-top:6px;min-height:16px"></div>
     </div>
     <button class="btn-enter" id="login-btn" disabled onclick="doLogin()">입장하기</button>
+    <div id="admin-login-area">
+      <button class="admin-toggle-link" onclick="toggleAdminLogin()">🔑 관리자 로그인</button>
+      <div class="admin-pw-row" id="admin-pw-row">
+        <input id="admin-pw-input" type="password" placeholder="관리자 비밀번호"
+          style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text1);font-size:14px;outline:none;margin-bottom:8px"
+          onkeydown="if(event.key==='Enter')doAdminLogin()">
+        <div id="admin-pw-err" style="font-size:11px;color:var(--red);min-height:14px;margin-bottom:6px"></div>
+        <button class="btn-enter" onclick="doAdminLogin()">관리자 입장</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -239,8 +275,9 @@ tbody td{padding:10px 12px;vertical-align:middle;white-space:nowrap}
     <span class="hd-badge">2026 하반기 · 11명</span>
   </div>
   <div class="hd-right">
-    <div class="user-pill"><div class="online-dot"></div><span id="hd-user">-</span></div>
-    <button class="hd-btn" onclick="gotoView('results')">내 평가 현황</button>
+    <div class="user-pill"><div class="online-dot" id="hd-dot"></div><span id="hd-user">-</span></div>
+    <button class="hd-btn" id="hd-btn-results" onclick="gotoView('results')">내 평가 현황</button>
+    <button class="hd-btn" id="hd-btn-admin" onclick="gotoView('admin')" style="display:none;color:#f85149">🔑 관리자</button>
     <button class="hd-btn" onclick="gotoView('settings')">⚙ 설정</button>
     <button class="hd-btn" onclick="logout()">로그아웃</button>
   </div>
@@ -256,6 +293,10 @@ tbody td{padding:10px 12px;vertical-align:middle;white-space:nowrap}
     <button class="nav-btn" id="nav-results" onclick="gotoView('results')" title="내 평가">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
       평가
+    </button>
+    <button class="nav-btn" id="nav-admin" onclick="gotoView('admin')" title="관리자" style="display:none;color:#f85149">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      관리자
     </button>
     <button class="nav-btn" id="nav-settings" onclick="gotoView('settings')" title="설정">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
@@ -307,6 +348,16 @@ tbody td{padding:10px 12px;vertical-align:middle;white-space:nowrap}
   <div class="main" id="results-view" style="display:none">
     <h2 style="margin-bottom:16px;font-size:16px">내 평가 현황 — <span id="rv-user"></span></h2>
     <div class="results-grid" id="results-grid"></div>
+  </div>
+
+  <!-- ADMIN VIEW -->
+  <div class="main" id="admin-view" style="display:none">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+      <h2 style="font-size:16px">🔑 관리자 — 전체 평가 내역</h2>
+      <span style="font-size:11px;background:#3d1f1f;color:#f85149;border:1px solid #6e2929;padding:2px 8px;border-radius:20px;font-weight:600">ADMIN</span>
+      <button onclick="adminFetchAll()" style="margin-left:auto;background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px">🔄 새로고침</button>
+    </div>
+    <div id="admin-content"></div>
   </div>
 
   <!-- SETTINGS VIEW -->
@@ -493,6 +544,8 @@ const COLORS = ['#58a6ff','#bc8cff','#3fb950','#d29922','#f85149','#f0883e'];
 const DEFAULT_CM = ['이봉호 본부장','박우진 본부장','전기민 실장','정유정 사업부장','박지강 소장','임승욱 실장'];
 const CM_PW = {'이봉호 본부장':'1221715','박우진 본부장':'1025623','전기민 실장':'1030315','정유정 사업부장':'2037114','박지강 소장':'1036932','임승욱 실장':'1057411'};
 
+const ADMIN_PW = '1234';
+let isAdmin = false, adminEditKey = null;
 let currentUser = null, openIdx = null, filterMode = 'all';
 const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzRG1lvhtNxC9gzj7ZwOvr7DDMjXqQ_uWo2jKzyYu9hZ781ZiTfhMkq_tmjZz70IVSLNQ/exec';
 let reviews = {}, committee = [], sheetsUrl = SHEETS_URL;
@@ -613,7 +666,7 @@ async function doLogin() {
   gotoView('main');
 }
 function logout() {
-  currentUser=null; openIdx=null;
+  currentUser=null; openIdx=null; isAdmin=false; adminEditKey=null;
   document.getElementById('login').style.display='flex';
   document.getElementById('app-header').style.display='none';
   document.getElementById('app-body').style.display='none';
@@ -622,21 +675,170 @@ function logout() {
   document.getElementById('pw-row').style.display='none';
   document.getElementById('pw-input').value='';
   document.getElementById('pw-err').textContent='';
+  document.getElementById('admin-pw-row').style.display='none';
+  document.getElementById('admin-pw-input').value='';
+  document.getElementById('admin-pw-err').textContent='';
+  document.getElementById('hd-btn-admin').style.display='none';
+  document.getElementById('hd-btn-results').style.display='';
+  document.getElementById('nav-admin').style.display='none';
+  document.getElementById('hd-dot').style.background='var(--accent3)';
   initLogin();
+}
+
+// ═══════════════════════════════════════════
+//  ADMIN
+// ═══════════════════════════════════════════
+function toggleAdminLogin() {
+  const row = document.getElementById('admin-pw-row');
+  const isOpen = row.style.display === 'block';
+  row.style.display = isOpen ? 'none' : 'block';
+  if(!isOpen) setTimeout(()=>document.getElementById('admin-pw-input').focus(), 50);
+}
+
+async function doAdminLogin() {
+  const pw = document.getElementById('admin-pw-input').value;
+  if(pw !== ADMIN_PW) {
+    document.getElementById('admin-pw-err').textContent = '비밀번호가 올바르지 않습니다.';
+    return;
+  }
+  isAdmin = true;
+  currentUser = '관리자';
+  document.getElementById('login').style.display='none';
+  document.getElementById('app-header').style.display='flex';
+  document.getElementById('app-body').style.display='flex';
+  document.getElementById('hd-user').textContent = '🔑 관리자';
+  document.getElementById('hd-dot').style.background='#f85149';
+  document.getElementById('hd-btn-admin').style.display='';
+  document.getElementById('hd-btn-results').style.display='none';
+  document.getElementById('nav-admin').style.display='flex';
+  await adminFetchAll();
+  gotoView('admin');
+}
+
+async function adminFetchAll() {
+  const content = document.getElementById('admin-content');
+  content.innerHTML = '<p style="color:var(--text2);font-size:13px">📡 Google Sheets에서 전체 데이터를 불러오는 중...</p>';
+  try {
+    const fetches = DEFAULT_CM.map(name =>
+      fetch(SHEETS_URL + '?user=' + encodeURIComponent(name))
+        .then(r=>r.json()).catch(()=>({status:'err',data:[]}))
+    );
+    const results = await Promise.all(fetches);
+    results.forEach(json => {
+      if(json.status==='ok') {
+        json.data.forEach(row => {
+          const key = `${row.심의위원}:${row.사번}`;
+          if(!reviews[key] || new Date(row.timestamp) >= new Date(reviews[key]?.timestamp||0)) {
+            reviews[key] = { result:row.결과, comment:row.평가의견, timestamp:row.timestamp };
+          }
+        });
+      }
+    });
+    saveState();
+  } catch(e) {}
+  renderAdmin();
+}
+
+function renderAdmin() {
+  const content = document.getElementById('admin-content');
+  content.innerHTML = C.map(c => {
+    const submitted = DEFAULT_CM
+      .map(name => ({ name, key:`${name}:${c.id}`, r: reviews[`${name}:${c.id}`] }))
+      .filter(x => x.r);
+    if(!submitted.length) return `
+      <div class="admin-cand-card">
+        <div class="admin-cand-hd">
+          <span class="acn">${c.no}. ${c.name}</span>
+          <span class="acd">${c.dept} · ${c.cur} → ${c.tar}</span>
+          <span style="margin-left:auto;font-size:11px;color:var(--text3)">제출 없음</span>
+        </div>
+      </div>`;
+    const rows = submitted.map(({name, key, r}) => {
+      const isEditing = adminEditKey === key;
+      const chip = r.result==='합격'
+        ? `<span style="font-size:11px;color:#3fb950;font-weight:700">✓ 합격</span>`
+        : `<span style="font-size:11px;color:var(--red);font-weight:700">✗ 불합격</span>`;
+      const ts = new Date(r.timestamp).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+      if(isEditing) return `
+        <div class="admin-rev-row" style="grid-template-columns:150px 1fr">
+          <div><div class="arm-name">${name}</div><div style="font-size:11px;color:var(--text3)">${ts}</div></div>
+          <div class="admin-edit-area" style="border-radius:6px;margin:0">
+            <div class="admin-res-btns">
+              <button class="admin-res-btn ${r.result==='합격'?'sel-pass':''}" id="aeb-pass-${c.id.replace(/\W/g,'_')}" onclick="adminToggleResult('${key}','합격')">✅ 합격</button>
+              <button class="admin-res-btn ${r.result==='불합격'?'sel-fail':''}" id="aeb-fail-${c.id.replace(/\W/g,'_')}" onclick="adminToggleResult('${key}','불합격')">❌ 불합격</button>
+            </div>
+            <textarea class="admin-ta" id="admin-ta-${key.replace(/[\s:]/g,'_')}">${r.comment||''}</textarea>
+            <div>
+              <button class="admin-save-btn" onclick="adminSaveReview('${key}','${c.id}','${c.name}','${c.dept}','${name}','${c.cur}','${c.tar}')">저장</button>
+              <button class="admin-cancel-btn" onclick="adminEditKey=null;renderAdmin()">취소</button>
+            </div>
+          </div>
+        </div>`;
+      return `
+        <div class="admin-rev-row">
+          <div><div class="arm-name">${name}</div><div style="font-size:11px;color:var(--text3)">${ts}</div></div>
+          <div>${chip}</div>
+          <div class="arm-comment">${r.comment||'(의견 없음)'}</div>
+          <div><button class="btn-admin-edit" onclick="adminEditKey='${key}';renderAdmin()">🔓 수정</button></div>
+        </div>`;
+    }).join('');
+    return `
+      <div class="admin-cand-card">
+        <div class="admin-cand-hd">
+          <span class="acn">${c.no}. ${c.name}</span>
+          <span class="acd">${c.dept} · ${c.cur} → ${c.tar}</span>
+          <span style="margin-left:auto;font-size:11px;color:var(--text3)">${submitted.length}명 제출</span>
+        </div>
+        ${rows}
+      </div>`;
+  }).join('');
+}
+
+function adminToggleResult(key, result) {
+  if(!reviews[key]) reviews[key]={};
+  reviews[key].result = result;
+  document.querySelectorAll(`[id^="aeb-pass-"], [id^="aeb-fail-"]`).forEach(b=>{
+    b.className = 'admin-res-btn';
+  });
+  const idSuffix = key.split(':')[1].replace(/\W/g,'_');
+  if(result==='합격') document.getElementById(`aeb-pass-${idSuffix}`)?.classList.add('sel-pass');
+  else document.getElementById(`aeb-fail-${idSuffix}`)?.classList.add('sel-fail');
+}
+
+async function adminSaveReview(key, cid, cname, cdept, cmName, cur, tar) {
+  if(!reviews[key]?.result) { showToast('합격/불합격을 먼저 선택하세요','err'); return; }
+  const taId = 'admin-ta-' + key.replace(/[\s:]/g,'_');
+  const comment = document.getElementById(taId)?.value || '';
+  reviews[key].comment = comment;
+  reviews[key].timestamp = new Date().toISOString();
+  saveState();
+  adminEditKey = null;
+  try {
+    const payload = {
+      timestamp: reviews[key].timestamp,
+      심의위원: cmName, 사번: cid, 이름: cname, 소속: cdept,
+      현재직무급: cur, 지원직무급: tar,
+      결과: reviews[key].result, 평가의견: comment,
+      심의기수: '2026 하반기'
+    };
+    await fetch(SHEETS_URL, {method:'POST', mode:'no-cors', body:JSON.stringify(payload), headers:{'Content-Type':'application/json'}});
+    showToast('✅ 수정 완료 · Google Sheets 반영됨','ok');
+  } catch { showToast('로컬 저장 완료 (Sheets 연결 실패)','err'); }
+  renderAdmin();
 }
 
 // ═══════════════════════════════════════════
 //  VIEWS
 // ═══════════════════════════════════════════
 function gotoView(v) {
-  ['main','results','settings'].forEach(k => {
+  ['main','results','settings','admin'].forEach(k => {
     document.getElementById(k+'-view').style.display = k===v?'block':'none';
     document.getElementById('nav-'+k)?.classList.toggle('active', k===v);
   });
   if(v==='main') { renderStats(); renderTable(); }
   else if(v==='results') renderResults();
   else if(v==='settings') renderSettings();
-  // close panel when not on main
+  else if(v==='admin') renderAdmin();
   if(v!=='main') { openIdx=null; document.getElementById('detail-panel').classList.remove('open'); }
 }
 
