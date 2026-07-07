@@ -292,9 +292,9 @@ tbody td{padding:10px 12px;vertical-align:middle;white-space:nowrap}
   <div class="hd-right">
     <div class="user-pill"><div class="online-dot" id="hd-dot"></div><span id="hd-user">-</span></div>
     <button class="hd-btn" id="hd-btn-results" onclick="gotoView('results')">내 평가 현황</button>
-    <a href="results.html" target="_blank" class="hd-btn" style="text-decoration:none;color:inherit">📊 결과 대시보드</a>
+    <a href="results.html" target="_blank" id="hd-btn-dashboard" class="hd-btn" style="text-decoration:none;color:inherit;display:none">📊 결과 대시보드</a>
     <button class="hd-btn" id="hd-btn-admin" onclick="gotoView('admin')" style="display:none;color:#f85149">🔑 관리자</button>
-    <button class="hd-btn" onclick="gotoView('settings')">⚙ 설정</button>
+    <button class="hd-btn" id="hd-btn-settings" onclick="gotoView('settings')" style="display:none">⚙ 설정</button>
     <button class="hd-btn" onclick="logout()">로그아웃</button>
   </div>
 </header>
@@ -314,7 +314,7 @@ tbody td{padding:10px 12px;vertical-align:middle;white-space:nowrap}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
       관리자
     </button>
-    <button class="nav-btn" id="nav-settings" onclick="gotoView('settings')" title="설정">
+    <button class="nav-btn" id="nav-settings" onclick="gotoView('settings')" title="설정" style="display:none">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
       설정
     </button>
@@ -697,6 +697,9 @@ async function doLogin() {
   document.getElementById('app-header').style.display='flex';
   document.getElementById('app-body').style.display='flex';
   document.getElementById('hd-user').textContent = currentUser;
+  document.getElementById('hd-btn-dashboard').style.display='none';
+  document.getElementById('hd-btn-settings').style.display='none';
+  document.getElementById('nav-settings').style.display='none';
   gotoView('main');
 }
 function logout() {
@@ -714,7 +717,10 @@ function logout() {
   document.getElementById('admin-pw-err').textContent='';
   document.getElementById('hd-btn-admin').style.display='none';
   document.getElementById('hd-btn-results').style.display='';
+  document.getElementById('hd-btn-dashboard').style.display='none';
+  document.getElementById('hd-btn-settings').style.display='none';
   document.getElementById('nav-admin').style.display='none';
+  document.getElementById('nav-settings').style.display='none';
   document.getElementById('hd-dot').style.background='var(--accent3)';
   initLogin();
 }
@@ -744,7 +750,10 @@ async function doAdminLogin() {
   document.getElementById('hd-dot').style.background='#f85149';
   document.getElementById('hd-btn-admin').style.display='';
   document.getElementById('hd-btn-results').style.display='none';
+  document.getElementById('hd-btn-dashboard').style.display='';
+  document.getElementById('hd-btn-settings').style.display='';
   document.getElementById('nav-admin').style.display='flex';
+  document.getElementById('nav-settings').style.display='flex';
   await adminFetchAll();
   gotoView('admin');
 }
@@ -753,68 +762,89 @@ async function adminFetchAll() {
   const content = document.getElementById('admin-content');
   content.innerHTML = '<p style="color:var(--text2);font-size:13px">📡 Google Sheets에서 전체 데이터를 불러오는 중...</p>';
   try {
-    const fetches = DEFAULT_CM.map(name =>
-      fetch(SHEETS_URL + '?user=' + encodeURIComponent(name))
-        .then(r=>r.json()).catch(()=>({status:'err',data:[]}))
-    );
-    const results = await Promise.all(fetches);
-    results.forEach(json => {
-      if(json.status==='ok') {
-        json.data.forEach(row => {
-          const key = `${row.심의위원}:${row.사번}`;
-          if(!reviews[key] || new Date(row.timestamp) >= new Date(reviews[key]?.timestamp||0)) {
-            reviews[key] = { result:row.결과, comment:row.평가의견, timestamp:row.timestamp };
-          }
-        });
-      }
-    });
-    saveState();
+    const json = await fetch(SHEETS_URL).then(r=>r.json()).catch(()=>({status:'err',data:[]}));
+    if(json.status==='ok') {
+      json.data.forEach(row => {
+        if(row.결과 === '__UNLOCK__') return;
+        const key = `${row.심의위원}:${row.사번}`;
+        if(!reviews[key] || new Date(row.timestamp) >= new Date(reviews[key]?.timestamp||0)) {
+          const sc = {};
+          COMPETENCIES.forEach(c => { const v = parseInt(row['역량_'+c.key]); if(v>=1) sc[c.key]=v; });
+          reviews[key] = { result:row.결과, comment:row.평가의견, timestamp:row.timestamp, scores:sc };
+        }
+      });
+      saveState();
+    }
   } catch(e) {}
   renderAdmin();
 }
 
 function renderAdmin() {
   const content = document.getElementById('admin-content');
-  content.innerHTML = C.map(c => {
-    const allCM = DEFAULT_CM.map(name => ({ name, key:`${name}:${c.id}`, r: reviews[`${name}:${c.id}`] }));
-    const submitted = allCM.filter(x => x.r);
-    const rows = allCM.map(({name, key, r}) => {
-      if(!r) return `
-        <div class="admin-rev-row">
-          <div><div class="arm-name">${name}</div></div>
-          <div><span style="font-size:11px;color:var(--text3)">미제출</span></div>
-          <div></div>
-          <div></div>
-        </div>`;
-      const chip = r.result==='합격'
-        ? `<span style="font-size:11px;color:#3fb950;font-weight:700">✓ 합격</span>`
-        : `<span style="font-size:11px;color:var(--red);font-weight:700">✗ 불합격</span>`;
-      const ts = new Date(r.timestamp).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-      const safeKey = key.replace(/[\s:]/g,'__');
-      return `
-        <div class="admin-rev-row">
-          <div><div class="arm-name">${name}</div><div style="font-size:11px;color:var(--text3)">${ts} 제출</div></div>
-          <div>${chip}</div>
-          <div class="arm-comment">${r.comment||'(의견 없음)'}</div>
-          <div>
-            <button class="btn-admin-edit" onclick="adminUnlock('${safeKey}','${c.id}','${c.name}','${c.dept}','${name}','${c.cur}','${c.tar}')">
-              🔓 반려
-            </button>
-          </div>
-        </div>`;
-    }).join('');
-    return `
-      <div class="admin-cand-card">
-        <div class="admin-cand-hd">
-          <span class="acn">${c.no}. ${c.name}</span>
-          <span class="acd">${c.dept} · ${c.cur} → ${c.tar}</span>
-          <span style="margin-left:auto;font-size:11px;color:${submitted.length?'var(--text2)':'var(--text3)'}">
-            ${submitted.length}/${DEFAULT_CM.length}명 제출
-          </span>
-        </div>
-        ${rows}
-      </div>`;
-  }).join('');
+  let html = '<div style="overflow-x:auto;border-radius:10px;border:1px solid var(--border)"><table style="border-collapse:collapse;min-width:900px;width:100%">';
+
+  // 헤더행: 코너 + 피평가자 이름
+  html += '<thead><tr style="background:var(--bg3);border-bottom:2px solid var(--border2)">';
+  html += '<th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--text2);min-width:130px;position:sticky;left:0;background:var(--bg3);z-index:2;border-right:2px solid var(--border2)">심의위원 \\ 피평가자</th>';
+  C.forEach(c => {
+    html += '<th style="padding:8px 6px;text-align:center;font-size:11px;border-left:1px solid var(--border);min-width:82px">'
+          + '<div style="font-weight:700;color:var(--text);white-space:nowrap">' + c.name + '</div>'
+          + '<div style="font-size:10px;color:var(--text3);margin-top:1px">' + c.cur + '→' + c.tar + '</div>'
+          + '</th>';
+  });
+  html += '</tr></thead><tbody>';
+
+  // 데이터행: 심의위원 × 피평가자
+  DEFAULT_CM.forEach(name => {
+    const submitted = C.filter(c => reviews[name+':'+c.id] && reviews[name+':'+c.id].result !== '__UNLOCK__').length;
+    html += '<tr style="border-top:1px solid var(--border)">';
+    html += '<td style="padding:10px 14px;background:var(--bg3);border-right:2px solid var(--border2);position:sticky;left:0;z-index:1;white-space:nowrap">'
+          + '<div style="font-size:13px;font-weight:600;color:var(--text)">' + name + '</div>'
+          + '<div style="font-size:10px;color:var(--text3);margin-top:2px">' + submitted + '/' + C.length + '명 완료</div>'
+          + '</td>';
+    C.forEach(c => {
+      const r = reviews[name+':'+c.id];
+      if(!r || r.result === '__UNLOCK__') {
+        html += '<td style="text-align:center;padding:8px 4px;border-left:1px solid var(--border)"><span style="color:var(--text3);font-size:12px">—</span></td>';
+      } else {
+        const isPass = r.result === '합격';
+        const bg = isPass ? '#0a1f12' : '#1f0a0a';
+        const color = isPass ? '#3fb950' : '#f85149';
+        const mark = isPass ? '✓ 합격' : '✗ 불합격';
+        const ts = r.timestamp ? new Date(r.timestamp).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+        html += '<td style="text-align:center;padding:6px 4px;border-left:1px solid var(--border);background:' + bg + '">'
+              + '<div style="display:flex;flex-direction:column;align-items:center;gap:2px">'
+              + '<span style="font-size:12px;font-weight:700;color:' + color + '">' + mark + '</span>'
+              + '<span style="font-size:10px;color:var(--text3)">' + ts + '</span>'
+              + '<button class="btn-admin-edit"'
+              + ' data-cid="' + c.id + '" data-cname="' + c.name + '" data-cdept="' + c.dept + '"'
+              + ' data-cmname="' + name + '" data-cur="' + c.cur + '" data-tar="' + c.tar + '"'
+              + ' onclick="adminUnlockBtn(this)">🔓 반려</button>'
+              + '</div></td>';
+      }
+    });
+    html += '</tr>';
+  });
+
+  // 집계행
+  html += '</tbody><tfoot><tr style="border-top:2px solid var(--border2)">';
+  html += '<td style="padding:7px 14px;background:var(--bg3);font-size:11px;color:var(--text2);font-weight:600;position:sticky;left:0;border-right:2px solid var(--border2)">합격 / 불합격 집계</td>';
+  C.forEach(c => {
+    const pass = DEFAULT_CM.filter(n => reviews[n+':'+c.id]?.result==='합격').length;
+    const fail = DEFAULT_CM.filter(n => reviews[n+':'+c.id]?.result==='불합격').length;
+    html += '<td style="text-align:center;padding:7px 4px;background:var(--bg3);font-size:11px;border-left:1px solid var(--border)">'
+          + '<span style="color:#3fb950;font-weight:700">' + pass + '합</span>'
+          + '<span style="color:var(--text3)"> / </span>'
+          + '<span style="color:#f85149;font-weight:700">' + fail + '불</span>'
+          + '</td>';
+  });
+  html += '</tr></tfoot></table></div>';
+  content.innerHTML = html;
+}
+
+function adminUnlockBtn(btn) {
+  const d = btn.dataset;
+  adminUnlock('', d.cid, d.cname, d.cdept, d.cmname, d.cur, d.tar);
 }
 
 async function adminUnlock(safeKey, cid, cname, cdept, cmName, cur, tar) {

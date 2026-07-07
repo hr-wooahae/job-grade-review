@@ -77,11 +77,35 @@ table.matrix tbody td.none-cell{background:transparent}
 .loading{text-align:center;padding:60px;color:var(--text2)}
 .loading-spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── AUTH GATE ── */
+#auth-gate{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center}
+.auth-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px 48px;width:420px;text-align:center}
+.auth-title{font-size:18px;font-weight:700;margin-bottom:6px}
+.auth-sub{font-size:12px;color:var(--text2);margin-bottom:24px}
+.auth-tag{display:inline-block;background:#3d1f1f;color:#f85149;border:1px solid #6e2929;font-size:11px;padding:3px 10px;border-radius:20px;margin-bottom:16px;font-weight:600}
 </style>
 </head>
 <body>
 
-<header>
+<!-- AUTH GATE -->
+<div id="auth-gate">
+  <div class="auth-box">
+    <div class="auth-tag">🔑 관리자 전용</div>
+    <div class="auth-title">결과 대시보드</div>
+    <div class="auth-sub">관리자 비밀번호를 입력해 주세요</div>
+    <input id="auth-input" type="password" placeholder="관리자 비밀번호"
+      style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;margin-bottom:8px"
+      onkeydown="if(event.key==='Enter')doAuth()">
+    <div id="auth-err" style="font-size:11px;color:var(--red);min-height:16px;margin-bottom:10px"></div>
+    <button onclick="doAuth()"
+      style="width:100%;background:var(--accent);color:#0d1117;border:none;border-radius:8px;padding:12px;font-size:15px;font-weight:700;cursor:pointer">
+      입장하기
+    </button>
+  </div>
+</div>
+
+<header id="main-header" style="display:none">
   <div style="display:flex;align-items:center;gap:10px">
     <div class="hd-logo">직무급 <span>심의</span></div>
     <span class="hd-badge">결과 대시보드</span>
@@ -93,7 +117,7 @@ table.matrix tbody td.none-cell{background:transparent}
   </div>
 </header>
 
-<div class="content">
+<div class="content" id="main-content" style="display:none">
   <div id="summary-bar" class="summary-bar">
     <div class="loading"><div class="loading-spinner"></div></div>
   </div>
@@ -154,15 +178,10 @@ async function loadAll() {
   document.getElementById('detail-grid').innerHTML = '';
   allReviews = {};
 
-  const results = await Promise.all(
-    DEFAULT_CM.map(name =>
-      fetch(SHEETS_URL + '?user=' + encodeURIComponent(name))
-        .then(r => r.json()).catch(() => ({status:'err', data:[]}))
-    )
-  );
+  const json = await fetch(SHEETS_URL)
+    .then(r => r.json()).catch(() => ({status:'err', data:[]}));
 
-  results.forEach(json => {
-    if(json.status !== 'ok') return;
+  if(json.status === 'ok') {
     json.data.forEach(row => {
       if(row.결과 === '__UNLOCK__') return;
       const key = `${row.심의위원}:${row.사번}`;
@@ -175,10 +194,11 @@ async function loadAll() {
         };
       }
     });
-  });
+  }
 
-  document.getElementById('last-updated').textContent =
-    '업데이트 ' + new Date().toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  const tsVal = '업데이트 ' + new Date().toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('last-updated').innerHTML =
+    `<span id="ts-text" data-val="${tsVal}">${tsVal}</span> <span style="color:var(--border2)">· ${nextRefreshIn}초 후 자동갱신</span>`;
 
   renderSummary();
   renderMatrix();
@@ -367,7 +387,46 @@ function renderDetail() {
   }
 }
 
-loadAll();
+// ── AUTH ─────────────────────────────────────────────────
+const ADMIN_PW = '1234';
+let autoRefreshTimer = null;
+let countdownTimer = null;
+let nextRefreshIn = 30;
+
+function doAuth() {
+  const pw = document.getElementById('auth-input').value;
+  if(pw !== ADMIN_PW) {
+    document.getElementById('auth-err').textContent = '비밀번호가 올바르지 않습니다.';
+    document.getElementById('auth-input').focus();
+    return;
+  }
+  document.getElementById('auth-gate').style.display = 'none';
+  document.getElementById('main-header').style.display = 'flex';
+  document.getElementById('main-content').style.display = 'block';
+  loadAll();
+  startAutoRefresh();
+}
+
+function startAutoRefresh() {
+  nextRefreshIn = 30;
+  updateCountdown();
+  autoRefreshTimer = setInterval(() => {
+    loadAll();
+    nextRefreshIn = 30;
+  }, 30000);
+  countdownTimer = setInterval(() => {
+    nextRefreshIn--;
+    updateCountdown();
+  }, 1000);
+}
+
+function updateCountdown() {
+  const el = document.getElementById('last-updated');
+  const ts = document.getElementById('ts-text');
+  if(ts) el.innerHTML = `${ts.dataset.val} &nbsp;<span style="color:var(--border2)">· ${nextRefreshIn}초 후 자동갱신</span>`;
+}
+
+setTimeout(() => document.getElementById('auth-input')?.focus(), 100);
 </script>
 </body>
 </html>
