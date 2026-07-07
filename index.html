@@ -1115,10 +1115,7 @@ async function submitReview(idx) {
       사번: c.id, 이름: c.name, 소속: c.dept,
       현재직무급: c.cur, 지원직무급: c.tar,
       결과: reviews[key].result, 평가의견: comment,
-      심의기수: '2026 하반기',
-      역량_학습: scores.학습||'', 역량_소통: scores.소통||'', 역량_협력: scores.협력||'',
-      역량_실행: scores.실행||'', 역량_전문성: scores.전문성||'', 역량_문제해결: scores.문제해결||'',
-      역량_마인드셋: scores.마인드셋||'', 역량_전파코칭: scores.전파코칭||''
+      심의기수: '2026 하반기'
     };
     try {
       const res = await fetch(sheetsUrl, {method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload)});

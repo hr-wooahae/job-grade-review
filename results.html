@@ -158,8 +158,8 @@ table.matrix tbody td.none-cell{background:transparent}
 
   <!-- DETAIL PER CANDIDATE -->
   <div class="detail-title">
-    🔍 후보자별 역량 세부 결과
-    <span style="font-size:12px;color:var(--text2);font-weight:400">(공통역량 점수 + 평가의견)</span>
+    🔍 후보자별 세부 결과
+    <span style="font-size:12px;color:var(--text2);font-weight:400">(심의위원별 평가의견)</span>
   </div>
   <div id="detail-grid" class="detail-grid"></div>
 </div>
@@ -193,7 +193,6 @@ const C = [
 ];
 
 let allReviews = {};
-let radarCharts = {};
 
 async function loadAll() {
   document.getElementById('matrix-container').innerHTML =
@@ -224,10 +223,8 @@ async function loadAll() {
     validRows.forEach(row => {
       const key = `${row.심의위원}:${row.사번}`;
       if(!allReviews[key] || new Date(row.timestamp) >= new Date(allReviews[key]?.timestamp||0)) {
-        const sc = {};
-        COMP.forEach(c => { const v = parseInt(row['역량_'+c.key]); if(v >= 1) sc[c.key] = v; });
         allReviews[key] = {
-          scores: sc, result: row.결과, comment: row.평가의견,
+          result: row.결과, comment: row.평가의견,
           timestamp: row.timestamp, reviewer: row.심의위원
         };
       }
@@ -295,17 +292,13 @@ function renderMatrix() {
     const cells = C.map(c => {
       const r = getR(cm, c.id);
       if(!r) return '<td class="none-cell"><div class="cell-inner"><span class="chip-none">—</span></div></td>';
-      const avgComp = COMP.map(cp => r.scores?.[cp.key]).filter(v=>v>=1);
-      const avgVal = avgComp.length ? (avgComp.reduce((a,b)=>a+b,0)/avgComp.length).toFixed(1) : null;
       if(r.result === '합격') return `
         <td class="pass-cell"><div class="cell-inner">
           <span class="chip-pass">✓ 합격</span>
-          ${avgVal ? `<span class="score-tag">역량 ${avgVal}점</span>` : ''}
         </div></td>`;
       return `
         <td class="fail-cell"><div class="cell-inner">
           <span class="chip-fail">✗ 불합격</span>
-          ${avgVal ? `<span class="score-tag">역량 ${avgVal}점</span>` : ''}
         </div></td>`;
     }).join('');
 
@@ -353,55 +346,24 @@ function renderMatrix() {
 
 // ── DETAIL ───────────────────────────────────────────────
 function renderDetail() {
-  Object.values(radarCharts).forEach(ch => ch.destroy());
-  radarCharts = {};
-
   const grid = document.getElementById('detail-grid');
   grid.innerHTML = '';
-
-  const SCORE_LABELS = {5:'매우 그렇다',4:'그렇다',3:'보통이다',2:'그렇지 않다',1:'전혀 그렇지 않다'};
 
   C.forEach(c => {
     const rv = DEFAULT_CM.map(cm => ({cm, r:getR(cm, c.id)})).filter(x=>x.r);
     if(!rv.length) return;
 
-    // 평균 계산
-    const avgVals = COMP.map(comp => {
-      const vals = rv.map(x=>x.r.scores?.[comp.key]).filter(v=>v>=1);
-      return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
-    });
-
     // 심의위원별 평가 행
     const cmRows = rv.map(({cm, r}) => {
       const isPass = r.result === '합격';
       const ts = r.timestamp ? new Date(r.timestamp).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
-      const compCells = COMP.map(comp => {
-        const sv = r.scores?.[comp.key];
-        const color = sv ? SCORE_COLORS[sv] : 'var(--text3)';
-        return `<div class="cm-comp-cell">
-          <div class="ccl">${comp.label.replace(/[①-⑧]\s/,'')}</div>
-          <div class="ccv" style="color:${color}">${sv||'—'}</div>
-        </div>`;
-      }).join('');
       return `<div class="cm-eval-row">
         <div class="cm-eval-hd">
           <span class="cm-eval-name">${cm}</span>
           <span class="cm-result-chip ${isPass?'crp-pass':'crp-fail'}">${isPass?'✓ 합격':'✗ 불합격'}</span>
           <span class="cm-eval-ts">${ts}</span>
         </div>
-        <div class="cm-comp-grid">${compCells}</div>
         <div class="cm-comment">${r.comment||'(평가의견 없음)'}</div>
-      </div>`;
-    }).join('');
-
-    // 평균 바
-    const chartId = `rc-${c.id}`;
-    const avgBars = COMP.map((comp,i) => {
-      const a = avgVals[i];
-      return `<div class="comp-avg-row">
-        <span class="comp-label">${comp.label}</span>
-        <div class="comp-bar"><div class="comp-bar-fill" style="width:${a/5*100}%;background:${barColor(a)}"></div></div>
-        <span class="comp-val" style="color:${barColor(a)}">${a?a.toFixed(1):'-'}</span>
       </div>`;
     }).join('');
 
@@ -415,39 +377,9 @@ function renderDetail() {
         <span class="dc-grade">${c.cur} → ${c.tar}</span>
         <span style="font-size:11px;color:var(--text3);margin-left:4px">${rv.length}/${DEFAULT_CM.length}명 평가</span>
       </div>
-      <div class="detail-card-body">${cmRows}</div>
-      <div class="avg-section">
-        <div class="avg-section-lbl">공통역량 평균 (${rv.length}명 기준)</div>
-        <div style="display:grid;grid-template-columns:1fr 200px;gap:16px;align-items:start">
-          <div>${avgBars}</div>
-          <div class="chart-container"><canvas id="${chartId}"></canvas></div>
-        </div>
-      </div>`;
+      <div class="detail-card-body">${cmRows}</div>`;
     grid.appendChild(div);
 
-    const ctx = document.getElementById(chartId)?.getContext('2d');
-    if(ctx) {
-      radarCharts[chartId] = new Chart(ctx, {
-        type:'radar',
-        data:{
-          labels: COMP.map(c=>c.label),
-          datasets:[{
-            data: avgVals,
-            backgroundColor:'rgba(0,104,176,0.08)',
-            borderColor:'#0068B0',
-            pointBackgroundColor: avgVals.map(v=>barColor(v)),
-            pointRadius:3, borderWidth:2,
-          }]
-        },
-        options:{
-          scales:{r:{min:0,max:5,ticks:{stepSize:1,color:'#8A96A3',font:{size:9}},
-            grid:{color:'#DDE1E7'},angleLines:{color:'#DDE1E7'},
-            pointLabels:{color:'#5A6A7A',font:{size:9}}}},
-          plugins:{legend:{display:false}},
-          responsive:true,maintainAspectRatio:true,
-        }
-      });
-    }
   });
 
   if(!grid.children.length) {
