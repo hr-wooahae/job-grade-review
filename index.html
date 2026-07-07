@@ -180,6 +180,21 @@ tbody td{padding:10px 12px;vertical-align:middle;white-space:nowrap}
 .eval-ta:disabled{opacity:0.35;cursor:not-allowed;resize:none}
 .btn-submit:disabled{opacity:0.4;cursor:not-allowed}
 .form-row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:8px}
+
+/* ── COMPETENCY FORM ─────────────────── */
+.comp-section-hd{font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.comp-item{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:5px}
+.comp-item-top{display:flex;align-items:flex-start;gap:10px}
+.comp-item-label{font-size:12px;font-weight:700;color:var(--text);min-width:82px;flex-shrink:0;padding-top:1px}
+.comp-item-desc{font-size:11px;color:var(--text2);line-height:1.55;flex:1}
+.comp-score-row{display:flex;gap:4px;margin-top:8px}
+.csb{flex:1;padding:5px 2px;border-radius:5px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);cursor:pointer;font-size:11px;font-weight:700;text-align:center;transition:.1s;line-height:1.3}
+.csb:hover{border-color:var(--accent2);color:var(--accent2)}
+.csb.sel-5{background:#0d2818;color:#3fb950;border-color:#3fb950}
+.csb.sel-4{background:#0d1f3a;color:#58a6ff;border-color:#58a6ff}
+.csb.sel-3{background:#2a2200;color:#d29922;border-color:#d29922}
+.csb.sel-2{background:#2a1400;color:#f0883e;border-color:#f0883e}
+.csb.sel-1{background:#2a0a0a;color:#f85149;border-color:#f85149}
 .btn-submit{background:var(--accent);color:#0d1117;border:none;border-radius:7px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer}
 .btn-submit:hover{background:#79c0ff}
 .form-hint{font-size:11px;color:var(--text3)}
@@ -277,6 +292,7 @@ tbody td{padding:10px 12px;vertical-align:middle;white-space:nowrap}
   <div class="hd-right">
     <div class="user-pill"><div class="online-dot" id="hd-dot"></div><span id="hd-user">-</span></div>
     <button class="hd-btn" id="hd-btn-results" onclick="gotoView('results')">내 평가 현황</button>
+    <a href="results.html" target="_blank" class="hd-btn" style="text-decoration:none;color:inherit">📊 결과 대시보드</a>
     <button class="hd-btn" id="hd-btn-admin" onclick="gotoView('admin')" style="display:none;color:#f85149">🔑 관리자</button>
     <button class="hd-btn" onclick="gotoView('settings')">⚙ 설정</button>
     <button class="hd-btn" onclick="logout()">로그아웃</button>
@@ -546,6 +562,19 @@ const CM_PW = {'이봉호 본부장':'1221715','박우진 본부장':'1025623','
 
 const ADMIN_PW = '1234';
 let isAdmin = false, adminEditKey = null;
+
+const COMPETENCIES = [
+  {key:'학습',     label:'① 학습',      desc:'직무 관련 지식에 정통하고 시장 트렌드를 정확히 파악하고 있으며, 이를 통해 변화사례를 이끌어 낼 수 있다.'},
+  {key:'소통',     label:'② 소통',      desc:'구성원들이 궁금해 하는 것을 막힘없이 이해할 수 있게 설명할 수 있으며, 의견의 본질을 파악하여 취합하고 전파하여 직책자들과 소통 가능하다.'},
+  {key:'협력',     label:'③ 협력',      desc:'본인의 업무 뿐만 아니라 팀 내/외 협업과제 수행시 중심축 역할을 해내며, 업무 개선방향을 수립하여 제안할 수 있다.'},
+  {key:'실행',     label:'④ 실행',      desc:'업무 수행에 대한 노하우 및 경험을 기반으로 주어진 과제의 특성을 파악하여 업무생산성 개선 등을 고려한 최적의 업무추진 계획을 수립하고 실행한다.'},
+  {key:'전문성',   label:'⑤ 전문성',    desc:'직무 분야에 대한 인사이트를 기반으로 내외부 고객에게 설명할 수 있고, 고객이 원하는 것을 예측하여 해결해 줄 수 있다.'},
+  {key:'문제해결', label:'⑥ 문제해결',  desc:'문제해결을 위해 유관 업무나 부서의 영향도 까지 고려하여 고민하며 향후 같은 문제가 재발하지 않도록 근본적인 해결방안을 고민한다.'},
+  {key:'마인드셋', label:'⑦ Mind Set', desc:'고객(내부직원/외부고객) 가치를 최우선으로 여기고, 상시 의사소통 가능한 채널을 갖추고 있으며 문제발생시 신속하게 오픈하고 공유하여 해결한다.'},
+  {key:'전파코칭', label:'⑧ 전파/코칭', desc:'동료들에게 본인의 성공 경험과 노하우를 전파하고 코칭함으로써, 이들의 역량향상을 이끌어내어 상호 업무를 교류할 수 있게 한다.'},
+];
+const SCORE_LABELS = {5:'매우 그렇다',4:'그렇다',3:'보통이다',2:'그렇지 않다',1:'전혀 그렇지 않다'};
+const SCORE_COLORS = {5:'#3fb950',4:'#58a6ff',3:'#d29922',2:'#f0883e',1:'#f85149'};
 let currentUser = null, openIdx = null, filterMode = 'all';
 const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzRG1lvhtNxC9gzj7ZwOvr7DDMjXqQ_uWo2jKzyYu9hZ781ZiTfhMkq_tmjZz70IVSLNQ/exec';
 let reviews = {}, committee = [], sheetsUrl = SHEETS_URL;
@@ -650,9 +679,11 @@ async function doLogin() {
         const key = `${row.심의위원}:${row.사번}`;
         if(new Date(row.timestamp) >= new Date(reviews[key]?.timestamp||0)) {
           if(row.결과 === '__UNLOCK__') {
-            delete reviews[key]; // 관리자가 잠금 해제한 경우 → 재작성 가능 상태로 초기화
+            delete reviews[key];
           } else {
-            reviews[key] = { result: row.결과, comment: row.평가의견, timestamp: row.timestamp };
+            const sc = {};
+            COMPETENCIES.forEach(c => { const v = parseInt(row['역량_'+c.key]); if(v >= 1) sc[c.key] = v; });
+            reviews[key] = { scores: sc, result: row.결과, comment: row.평가의견, timestamp: row.timestamp };
           }
         }
       });
@@ -973,36 +1004,70 @@ function renderDetail(idx) {
       <h4>심의위원 평가</h4>
       ${(()=>{
         const isLocked = !!myR.timestamp;
-        const hasResult = !!myR.result;
-        if(isLocked) return `
-        <div class="eval-form">
-          <h4>✏️ ${currentUser} 님의 평가 <span style="font-size:11px;color:#3fb950;font-weight:400;margin-left:6px">🔒 제출 완료</span></h4>
-          <div class="result-btns" style="pointer-events:none">
-            <button class="rbtn pass ${myR.result==='합격'?'sel':''}" disabled>✅ 합격</button>
-            <button class="rbtn fail ${myR.result==='불합격'?'sel':''}" disabled>❌ 불합격</button>
-          </div>
-          <div style="margin-bottom:6px"><span style="font-size:11px;color:var(--text2)">평가의견</span></div>
-          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:10px 12px;font-size:13px;color:var(--text1);min-height:72px;white-space:pre-wrap;line-height:1.6">${myR.comment||'(의견 없음)'}</div>
-          <div class="form-row" style="margin-top:10px">
-            <span style="font-size:12px;color:#3fb950">🔒 제출 완료 · 수정 불가</span>
-            <span class="form-hint">저장: ${new Date(myR.timestamp).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</span>
-          </div>
-        </div>`;
+        const scores = myR.scores || {};
+        const scoredCount = COMPETENCIES.filter(c => scores[c.key] >= 1).length;
+        const allScored = scoredCount === COMPETENCIES.length;
+
+        if(isLocked) {
+          const scoreRows = COMPETENCIES.map(comp => {
+            const sv = scores[comp.key];
+            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">
+              <span style="font-size:11px;font-weight:600;color:var(--text2)">${comp.label}</span>
+              ${sv ? `<span style="font-size:12px;font-weight:700;color:${SCORE_COLORS[sv]}">${sv}점 &nbsp;${SCORE_LABELS[sv]}</span>`
+                   : '<span style="font-size:11px;color:var(--text3)">-</span>'}
+            </div>`;
+          }).join('');
+          return `
+          <div class="eval-form">
+            <h4>✏️ ${currentUser} 님의 평가 <span style="font-size:11px;color:#3fb950;font-weight:400;margin-left:6px">🔒 제출 완료</span></h4>
+            <div class="comp-section-hd">3. 공통역량 평가</div>
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px">${scoreRows}</div>
+            <div class="comp-section-hd" style="margin-top:14px">4. 직무역량 평가</div>
+            <div class="result-btns" style="pointer-events:none">
+              <button class="rbtn pass ${myR.result==='합격'?'sel':''}" disabled>✅ 합격</button>
+              <button class="rbtn fail ${myR.result==='불합격'?'sel':''}" disabled>❌ 불합격</button>
+            </div>
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:10px 12px;font-size:13px;color:var(--text1);min-height:60px;white-space:pre-wrap;line-height:1.6">${myR.comment||'(의견 없음)'}</div>
+            <div class="form-row" style="margin-top:10px">
+              <span style="font-size:12px;color:#3fb950">🔒 제출 완료 · 수정 불가</span>
+              <span class="form-hint">저장: ${new Date(myR.timestamp).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</span>
+            </div>
+          </div>`;
+        }
+
+        const compItems = COMPETENCIES.map(comp => {
+          const sv = scores[comp.key];
+          const btns = [5,4,3,2,1].map(v =>
+            `<button class="csb${sv===v?` sel-${v}`:''}" data-comp="${comp.key}" data-score="${v}"
+              onclick="setMyScore(${idx},'${comp.key}',${v})">${v}<br><span style="font-size:8px">${['','전혀','아니다','보통','그렇다','매우'][v]}</span></button>`
+          ).join('');
+          return `<div class="comp-item">
+            <div class="comp-item-top">
+              <span class="comp-item-label">${comp.label}</span>
+              <span class="comp-item-desc">${comp.desc}</span>
+            </div>
+            <div class="comp-score-row">${btns}</div>
+          </div>`;
+        }).join('');
+
         return `
         <div class="eval-form">
           <h4>✏️ ${currentUser} 님의 평가</h4>
+          <div class="comp-section-hd">3. 공통역량 평가 <span style="font-weight:400;color:${allScored?'#3fb950':'var(--accent)'}">(${scoredCount}/8 완료)</span></div>
+          ${compItems}
+          <div class="comp-section-hd" style="margin-top:14px">4. 직무역량 평가</div>
           <div class="result-btns">
             <button class="rbtn pass ${myR.result==='합격'?'sel':''}" onclick="setMyResult('합격',${idx})">✅ 합격</button>
             <button class="rbtn fail ${myR.result==='불합격'?'sel':''}" onclick="setMyResult('불합격',${idx})">❌ 불합격</button>
           </div>
           <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px">
             <span style="font-size:11px;color:var(--text2)">평가의견</span>
-            ${!hasResult?'<span style="font-size:11px;color:var(--accent)">← 먼저 합격/불합격을 선택하세요</span>':''}
+            ${!myR.result?'<span style="font-size:11px;color:var(--accent)">← 먼저 합격/불합격을 선택하세요</span>':''}
           </div>
-          <textarea class="eval-ta" id="ta-${idx}" placeholder="발표를 청취 후 평가의견을 작성해 주세요..." ${!hasResult?'disabled':''}>${myR.comment||''}</textarea>
+          <textarea class="eval-ta" id="ta-${idx}" placeholder="발표를 청취 후 평가의견을 작성해 주세요..." ${!myR.result?'disabled':''}>${myR.comment||''}</textarea>
           <div class="form-row">
-            <button class="btn-submit" onclick="submitReview(${idx})" ${!hasResult?'disabled':''}>저장 · 제출</button>
-            <span class="form-hint">미제출</span>
+            <button class="btn-submit" onclick="submitReview(${idx})" ${!allScored||!myR.result?'disabled':''}>저장 · 제출</button>
+            <span class="form-hint">${!allScored?`공통역량 ${8-scoredCount}개 미완료`:!myR.result?'합격/불합격 미선택':'미제출'}</span>
           </div>
         </div>`;
       })()}
@@ -1026,22 +1091,53 @@ function setMyResult(result, idx) {
   renderStats();
 }
 
+function setMyScore(idx, compKey, score) {
+  const key = `${currentUser}:${C[idx].id}`;
+  if(reviews[key]?.timestamp) { showToast('이미 제출된 평가는 수정할 수 없습니다','err'); return; }
+  if(!reviews[key]) reviews[key]={};
+  if(!reviews[key].scores) reviews[key].scores={};
+  reviews[key].scores[compKey] = score;
+  saveState();
+  // 해당 역량 버튼 시각만 업데이트 (전체 re-render 없이)
+  document.querySelectorAll(`[data-comp="${compKey}"]`).forEach(btn => {
+    const v = parseInt(btn.dataset.score);
+    btn.className = 'csb' + (v === score ? ` sel-${v}` : '');
+  });
+  // 완료 카운트 힌트 갱신
+  const sc = reviews[key].scores || {};
+  const done = COMPETENCIES.filter(c => sc[c.key] >= 1).length;
+  const allDone = done === COMPETENCIES.length;
+  const hint = document.querySelector(`#dp-inner .form-hint`);
+  const btn = document.querySelector(`#dp-inner .btn-submit`);
+  if(hint) hint.textContent = !allDone ? `공통역량 ${8-done}개 미완료` : !reviews[key]?.result ? '합격/불합격 미선택' : '미제출';
+  if(btn) btn.disabled = !allDone || !reviews[key]?.result;
+  // 공통역량 완료 표시 갱신
+  const hd = document.querySelector('#dp-inner .comp-section-hd');
+  if(hd) hd.innerHTML = `3. 공통역량 평가 <span style="font-weight:400;color:${allDone?'#3fb950':'var(--accent)'}">(${done}/8 완료)</span>`;
+}
+
 async function submitReview(idx) {
   const c = C[idx], key = `${currentUser}:${c.id}`;
   const comment = document.getElementById(`ta-${idx}`)?.value || '';
-  if(!reviews[key]?.result) { showToast('합격/불합격을 먼저 선택해 주세요','err'); return; }
+  const scores = reviews[key]?.scores || {};
+  const missing = COMPETENCIES.filter(comp => !(scores[comp.key] >= 1));
+  if(missing.length > 0) { showToast(`공통역량 [${missing[0].label}] 항목을 평가해 주세요`, 'err'); return; }
+  if(!reviews[key]?.result) { showToast('직무역량 합격/불합격을 먼저 선택해 주세요','err'); return; }
   reviews[key].comment = comment;
-  reviews[key].timestamp = Date.now();
+  reviews[key].timestamp = new Date().toISOString();
   saveState();
 
   if(sheetsUrl) {
     const payload = {
-      timestamp: new Date().toISOString(),
+      timestamp: reviews[key].timestamp,
       심의위원: currentUser,
       사번: c.id, 이름: c.name, 소속: c.dept,
       현재직무급: c.cur, 지원직무급: c.tar,
       결과: reviews[key].result, 평가의견: comment,
-      심의기수: '2026 하반기'
+      심의기수: '2026 하반기',
+      역량_학습: scores.학습||'', 역량_소통: scores.소통||'', 역량_협력: scores.협력||'',
+      역량_실행: scores.실행||'', 역량_전문성: scores.전문성||'', 역량_문제해결: scores.문제해결||'',
+      역량_마인드셋: scores.마인드셋||'', 역량_전파코칭: scores.전파코칭||''
     };
     try {
       await fetch(sheetsUrl, {method:'POST', mode:'no-cors', body:JSON.stringify(payload), headers:{'Content-Type':'application/json'}});

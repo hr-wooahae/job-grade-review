@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>결과 대시보드 — 2026 잡매니저 이상 직무급 심의</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:#0d1117; --bg2:#161b22; --bg3:#21262d; --bg4:#2d333b;
+  --border:#30363d; --border2:#444c56;
+  --accent:#58a6ff; --accent2:#bc8cff; --accent3:#3fb950;
+  --red:#f85149; --yellow:#d29922; --orange:#f0883e;
+  --text:#e6edf3; --text2:#8b949e; --text3:#6e7681;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Malgun Gothic','Segoe UI',sans-serif;font-size:14px;min-height:100vh}
+header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.hd-left{display:flex;align-items:center;gap:10px}
+.hd-logo{font-size:15px;font-weight:700}
+.hd-logo span{color:var(--accent)}
+.hd-badge{background:#1f3a5f;color:var(--accent);border:1px solid #1f6feb;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}
+.hd-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;text-decoration:none;display:inline-block}
+.hd-btn:hover{color:var(--text);border-color:var(--border2)}
+
+.content{max-width:1200px;margin:0 auto;padding:24px}
+
+/* SUMMARY BAR */
+.summary-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:28px}
+.scard{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center}
+.scard.blue .sv{color:var(--accent)}
+.scard.green .sv{color:var(--accent3)}
+.scard.red .sv{color:var(--red)}
+.scard.purple .sv{color:var(--accent2)}
+.scard.yellow .sv{color:var(--yellow)}
+.sv{font-size:26px;font-weight:700;margin-bottom:4px}
+.sl{font-size:11px;color:var(--text2)}
+
+/* CANDIDATE CARDS */
+.section-title{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.cand-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;margin-bottom:20px;overflow:hidden}
+.cand-hd{padding:14px 18px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.cand-no{font-size:12px;color:var(--text3);font-weight:600}
+.cand-name{font-size:16px;font-weight:700}
+.cand-dept{font-size:12px;color:var(--text2)}
+.cand-grade{font-size:12px;background:var(--bg4);border:1px solid var(--border);padding:2px 8px;border-radius:4px;color:var(--accent)}
+.pass-chip{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:700}
+.pc-pass{background:#0d2818;color:#3fb950;border:1px solid #3fb950}
+.pc-fail{background:#2a0d0d;color:var(--red);border:1px solid var(--red)}
+.pc-none{background:var(--bg4);color:var(--text3);border:1px solid var(--border)}
+.cand-body{display:grid;grid-template-columns:1fr 320px;gap:0}
+@media(max-width:900px){.cand-body{grid-template-columns:1fr}}
+
+/* LEFT: scores table */
+.scores-section{padding:16px 18px;border-right:1px solid var(--border)}
+.scores-section h5{font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.score-table{width:100%;border-collapse:collapse}
+.score-table th{font-size:10px;color:var(--text3);font-weight:600;padding:4px 8px;text-align:center;border-bottom:1px solid var(--border)}
+.score-table th.left{text-align:left}
+.score-table td{padding:5px 8px;font-size:12px;border-bottom:1px solid var(--border);text-align:center}
+.score-table td.left{text-align:left;font-weight:600;color:var(--text)}
+.score-table tr:last-child td{border-bottom:none}
+.avg-cell{font-weight:700}
+.score-bar-wrap{display:flex;align-items:center;gap:6px}
+.score-bar{height:6px;border-radius:3px;flex:1;background:var(--bg4)}
+.score-bar-fill{height:100%;border-radius:3px}
+
+/* RIGHT: radar chart */
+.chart-section{padding:16px 18px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.chart-section h5{font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;align-self:flex-start}
+.chart-wrap{width:280px;height:280px;position:relative}
+
+/* REVIEWER SECTION */
+.reviewers-section{padding:12px 18px 16px;border-top:1px solid var(--border)}
+.reviewers-section h5{font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.reviewer-row{display:grid;grid-template-columns:140px 70px 1fr;gap:10px;align-items:start;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}
+.reviewer-row:last-child{border-bottom:none}
+.rev-name{font-weight:600;color:var(--text)}
+.rev-comment{color:var(--text2);line-height:1.55;white-space:pre-wrap}
+
+/* LOADING / EMPTY */
+.loading{text-align:center;padding:60px;color:var(--text2)}
+.loading-spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.no-data{text-align:center;padding:32px;color:var(--text3);font-size:13px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hd-left">
+    <div class="hd-logo">직무급 <span>심의 시스템</span></div>
+    <span class="hd-badge">결과 대시보드</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span id="last-updated" style="font-size:11px;color:var(--text3)"></span>
+    <button class="hd-btn" onclick="loadAll()">🔄 새로고침</button>
+    <a href="index.html" class="hd-btn">← 심의 시스템으로</a>
+  </div>
+</header>
+
+<div class="content">
+  <div id="summary-bar" class="summary-bar"></div>
+  <div class="section-title">
+    📋 후보자별 심의 결과
+    <span id="progress-text" style="font-size:12px;color:var(--text2);font-weight:400"></span>
+  </div>
+  <div id="cards-container">
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      <div>Google Sheets에서 데이터를 불러오는 중...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzRG1lvhtNxC9gzj7ZwOvr7DDMjXqQ_uWo2jKzyYu9hZ781ZiTfhMkq_tmjZz70IVSLNQ/exec';
+const DEFAULT_CM = ['이봉호 본부장','박우진 본부장','전기민 실장','정유정 사업부장','박지강 소장','임승욱 실장'];
+
+const COMPETENCIES = [
+  {key:'학습',     label:'① 학습'},
+  {key:'소통',     label:'② 소통'},
+  {key:'협력',     label:'③ 협력'},
+  {key:'실행',     label:'④ 실행'},
+  {key:'전문성',   label:'⑤ 전문성'},
+  {key:'문제해결', label:'⑥ 문제해결'},
+  {key:'마인드셋', label:'⑦ Mind Set'},
+  {key:'전파코칭', label:'⑧ 전파/코칭'},
+];
+
+const SCORE_COLORS = {5:'#3fb950',4:'#58a6ff',3:'#d29922',2:'#f0883e',1:'#f85149'};
+
+const C = [
+  {no:1, id:'2600867', name:'이성', dept:'플랫폼코어팀', cur:'잡매니저-어쏘', tar:'잡매니저 멘토'},
+  {no:2, id:'2600871', name:'이보미', dept:'플랫폼서비스팀', cur:'잡매니저-어쏘', tar:'잡매니저 멘토'},
+  {no:3, id:'2600868', name:'고동욱', dept:'플랫폼코어팀', cur:'잡매니저-어쏘', tar:'잡매니저 멘토'},
+  {no:4, id:'2600860', name:'하요나', dept:'플랫폼BM팀', cur:'잡매니저-어쏘', tar:'잡매니저 멘토'},
+  {no:5, id:'EZ22070459', name:'이주언', dept:'인도네시아법인', cur:'잡매니저 멘토', tar:'잡매니저 S2'},
+  {no:6, id:'EZ22041930', name:'안진영', dept:'인도네시아법인', cur:'잡매니저 멘토', tar:'잡매니저 S2'},
+  {no:7, id:'EZ23102380', name:'조설경', dept:'인도네시아법인', cur:'잡매니저 멘토', tar:'잡매니저 S2'},
+  {no:8, id:'EZ22092681', name:'이재우', dept:'부산경남물류팀', cur:'잡매니저 멘토', tar:'잡매니저 S2'},
+  {no:9, id:'EZ19111129', name:'고준섭', dept:'부산경남물류팀', cur:'잡매니저 멘토', tar:'잡매니저 S2'},
+  {no:10, id:'2500316',   name:'김건우', dept:'수도권병원물류팀', cur:'잡매니저 멘토', tar:'잡매니저 S2'},
+  {no:11, id:'EZ24090932',name:'장의신', dept:'기업구매팀', cur:'팀/소장(R)', tar:'팀장 멘토'},
+];
+
+// key: `${심의위원}:${사번}` → {scores, result, comment, timestamp}
+let allReviews = {};
+let charts = {};
+
+async function loadAll() {
+  document.getElementById('cards-container').innerHTML = `
+    <div class="loading"><div class="loading-spinner"></div><div>Google Sheets에서 데이터를 불러오는 중...</div></div>`;
+  allReviews = {};
+
+  const fetches = DEFAULT_CM.map(name =>
+    fetch(SHEETS_URL + '?user=' + encodeURIComponent(name))
+      .then(r => r.json()).catch(() => ({status:'err', data:[]}))
+  );
+  const results = await Promise.all(fetches);
+  results.forEach(json => {
+    if(json.status !== 'ok') return;
+    json.data.forEach(row => {
+      if(row.결과 === '__UNLOCK__') return;
+      const key = `${row.심의위원}:${row.사번}`;
+      if(!allReviews[key] || new Date(row.timestamp) >= new Date(allReviews[key]?.timestamp||0)) {
+        const sc = {};
+        COMPETENCIES.forEach(c => { const v = parseInt(row['역량_'+c.key]); if(v >= 1) sc[c.key] = v; });
+        allReviews[key] = { scores: sc, result: row.결과, comment: row.평가의견, timestamp: row.timestamp, reviewer: row.심의위원 };
+      }
+    });
+  });
+
+  document.getElementById('last-updated').textContent = '업데이트: ' + new Date().toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  renderAll();
+}
+
+function getReviews(cid) {
+  return DEFAULT_CM.map(name => ({ name, r: allReviews[`${name}:${cid}`] })).filter(x => x.r);
+}
+
+function avgScores(reviews) {
+  const totals = {}, counts = {};
+  reviews.forEach(({r}) => {
+    COMPETENCIES.forEach(c => {
+      if(r.scores?.[c.key] >= 1) {
+        totals[c.key] = (totals[c.key]||0) + r.scores[c.key];
+        counts[c.key] = (counts[c.key]||0) + 1;
+      }
+    });
+  });
+  const avg = {};
+  COMPETENCIES.forEach(c => { avg[c.key] = counts[c.key] ? (totals[c.key]/counts[c.key]) : null; });
+  return avg;
+}
+
+function scoreBarColor(v) {
+  if(!v) return '#30363d';
+  if(v >= 4.5) return '#3fb950';
+  if(v >= 3.5) return '#58a6ff';
+  if(v >= 2.5) return '#d29922';
+  return '#f85149';
+}
+
+function renderAll() {
+  // Summary
+  const totalCands = C.length;
+  const submitted = C.filter(c => getReviews(c.id).length > 0).length;
+  const passCount = C.filter(c => {
+    const rv = getReviews(c.id);
+    return rv.length > 0 && rv.every(x => x.r.result === '합격');
+  }).length;
+  const failCount = C.filter(c => {
+    const rv = getReviews(c.id);
+    return rv.length > 0 && rv.some(x => x.r.result === '불합격');
+  }).length;
+  const totalReviews = Object.keys(allReviews).length;
+
+  document.getElementById('summary-bar').innerHTML = `
+    <div class="scard blue"><div class="sv">${totalCands}</div><div class="sl">전체 심의 대상</div></div>
+    <div class="scard purple"><div class="sv">${submitted}/${totalCands}</div><div class="sl">평가 완료 후보자</div></div>
+    <div class="scard green"><div class="sv">${passCount}</div><div class="sl">전원 합격</div></div>
+    <div class="scard red"><div class="sv">${failCount}</div><div class="sl">불합격 포함</div></div>
+    <div class="scard yellow"><div class="sv">${totalReviews}</div><div class="sl">총 제출 평가 수</div></div>`;
+
+  document.getElementById('progress-text').textContent = `(${submitted}/${totalCands}명 평가 완료)`;
+
+  // Destroy old charts
+  Object.values(charts).forEach(ch => ch.destroy());
+  charts = {};
+
+  const container = document.getElementById('cards-container');
+  container.innerHTML = '';
+
+  C.forEach(c => {
+    const rv = getReviews(c.id);
+    const avg = avgScores(rv);
+    const passRv = rv.filter(x => x.r.result === '합격').length;
+    const failRv = rv.filter(x => x.r.result === '불합격').length;
+
+    const passLabel = rv.length === 0
+      ? `<span class="pass-chip pc-none">미제출</span>`
+      : failRv > 0
+        ? `<span class="pass-chip pc-fail">불합격 ${failRv}명 포함</span>`
+        : `<span class="pass-chip pc-pass">전원 합격 (${passRv}명)</span>`;
+
+    // Score rows
+    const cmNames = rv.map(x => x.name);
+    const scoreHeaderCols = cmNames.map(n => `<th>${n.split(' ')[0]}</th>`).join('');
+    const scoreAvgHeader = cmNames.length > 1 ? '<th style="color:var(--accent)">평균</th>' : '';
+
+    const scoreRows = COMPETENCIES.map(comp => {
+      const indivCells = rv.map(({r}) => {
+        const v = r.scores?.[comp.key];
+        return v ? `<td style="color:${SCORE_COLORS[v]};font-weight:700">${v}</td>` : '<td style="color:var(--text3)">-</td>';
+      }).join('');
+      const a = avg[comp.key];
+      const avgCell = cmNames.length > 1
+        ? `<td class="avg-cell">
+            <div class="score-bar-wrap">
+              <div class="score-bar"><div class="score-bar-fill" style="width:${a?(a/5*100):0}%;background:${scoreBarColor(a)}"></div></div>
+              <span style="color:${scoreBarColor(a)};font-weight:700;font-size:11px;min-width:28px">${a?a.toFixed(1):'-'}</span>
+            </div>
+          </td>` : '';
+      return `<tr><td class="left">${comp.label}</td>${indivCells}${avgCell}</tr>`;
+    }).join('');
+
+    const chartId = `chart-${c.id}`;
+
+    const div = document.createElement('div');
+    div.className = 'cand-card';
+    div.innerHTML = `
+      <div class="cand-hd">
+        <span class="cand-no">${c.no}</span>
+        <span class="cand-name">${c.name}</span>
+        <span class="cand-dept">${c.dept}</span>
+        <span class="cand-grade">${c.cur} → ${c.tar}</span>
+        ${passLabel}
+        <span style="margin-left:auto;font-size:11px;color:var(--text3)">${rv.length}/${DEFAULT_CM.length}명 제출</span>
+      </div>
+      ${rv.length === 0 ? '<div class="no-data">아직 제출된 평가가 없습니다</div>' : `
+      <div class="cand-body">
+        <div class="scores-section">
+          <h5>공통역량 평가 점수</h5>
+          ${rv.length > 0 ? `
+          <table class="score-table">
+            <thead><tr><th class="left">역량</th>${scoreHeaderCols}${scoreAvgHeader}</tr></thead>
+            <tbody>${scoreRows}</tbody>
+          </table>` : '<div class="no-data">역량 점수 없음</div>'}
+        </div>
+        <div class="chart-section">
+          <h5>역량 레이더 차트 (평균)</h5>
+          <div class="chart-wrap"><canvas id="${chartId}"></canvas></div>
+        </div>
+      </div>
+      <div class="reviewers-section">
+        <h5>직무역량 평가 의견</h5>
+        ${rv.map(({name, r}) => `
+          <div class="reviewer-row">
+            <div class="rev-name">${name}</div>
+            <div>${r.result === '합격'
+              ? '<span class="pass-chip pc-pass">✓ 합격</span>'
+              : '<span class="pass-chip pc-fail">✗ 불합격</span>'}</div>
+            <div class="rev-comment">${r.comment || '(의견 없음)'}</div>
+          </div>`).join('')}
+      </div>`}
+    `;
+    container.appendChild(div);
+
+    if(rv.length > 0) {
+      const avgVals = COMPETENCIES.map(comp => avg[comp.key] || 0);
+      const ctx = document.getElementById(chartId)?.getContext('2d');
+      if(ctx) {
+        charts[chartId] = new Chart(ctx, {
+          type: 'radar',
+          data: {
+            labels: COMPETENCIES.map(c => c.label),
+            datasets: [{
+              label: '평균 점수',
+              data: avgVals,
+              backgroundColor: 'rgba(88,166,255,0.15)',
+              borderColor: '#58a6ff',
+              pointBackgroundColor: avgVals.map(v => scoreBarColor(v)),
+              pointRadius: 4,
+              borderWidth: 2,
+            }]
+          },
+          options: {
+            scales: { r: {
+              min: 0, max: 5,
+              ticks: { stepSize: 1, color: '#6e7681', font: {size: 10} },
+              grid: { color: '#30363d' },
+              angleLines: { color: '#30363d' },
+              pointLabels: { color: '#8b949e', font: {size: 10} },
+            }},
+            plugins: { legend: { display: false } },
+            responsive: true, maintainAspectRatio: true,
+          }
+        });
+      }
+    }
+  });
+}
+
+loadAll();
+</script>
+</body>
+</html>
