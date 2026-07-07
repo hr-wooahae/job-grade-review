@@ -558,7 +558,7 @@ function initLogin() {
     g.appendChild(btn);
   });
 }
-function doLogin() {
+async function doLogin() {
   if(!currentUser) return;
   const pw = document.getElementById('pw-input').value;
   if(pw !== CM_PW[currentUser]) {
@@ -566,6 +566,29 @@ function doLogin() {
     document.getElementById('pw-input').focus();
     return;
   }
+  // 로딩 표시
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true;
+  btn.textContent = '불러오는 중...';
+
+  // 구글시트에서 기존 제출 내역 로드
+  try {
+    const res = await fetch(SHEETS_URL + '?user=' + encodeURIComponent(currentUser));
+    const json = await res.json();
+    if(json.status === 'ok' && json.data.length > 0) {
+      json.data.forEach(row => {
+        const key = `${row.심의위원}:${row.사번}`;
+        // 시트 데이터가 더 최신이거나 로컬에 없으면 덮어씀
+        if(!reviews[key] || new Date(row.timestamp) >= new Date(reviews[key]?.timestamp||0)) {
+          reviews[key] = { result: row.결과, comment: row.평가의견, timestamp: row.timestamp };
+        }
+      });
+      saveState();
+    }
+  } catch(e) { /* 네트워크 오류 시 로컬 데이터로 진행 */ }
+
+  btn.disabled = false;
+  btn.textContent = '입장하기';
   document.getElementById('login').style.display='none';
   document.getElementById('app-header').style.display='flex';
   document.getElementById('app-body').style.display='flex';
