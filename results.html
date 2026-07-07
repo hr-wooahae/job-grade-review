@@ -44,10 +44,10 @@ table.matrix thead th.corner{position:sticky;left:0;z-index:20;background:var(--
 table.matrix tbody th{background:var(--bg3);font-size:12px;font-weight:600;color:var(--text);padding:10px 14px;text-align:left;position:sticky;left:0;z-index:5;min-width:130px;border-right:2px solid var(--border2)}
 table.matrix tbody td{min-width:88px;padding:0}
 table.matrix tbody td .cell-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 6px;gap:3px;min-height:52px;cursor:default}
-table.matrix tbody td.pass-cell{background:#EEF8F2}
+table.matrix tbody td.pass-cell{background:#EEF4FB}
 table.matrix tbody td.fail-cell{background:#FDF0F0}
 table.matrix tbody td.none-cell{background:transparent}
-.chip-pass{font-size:11px;font-weight:700;color:var(--accent3)}
+.chip-pass{font-size:11px;font-weight:700;color:#0068B0}
 .chip-fail{font-size:11px;font-weight:700;color:var(--red)}
 .chip-none{font-size:11px;color:var(--text3)}
 .score-tag{font-size:10px;color:var(--text3)}
@@ -69,7 +69,7 @@ table.matrix tbody td.none-cell{background:transparent}
 .cm-eval-hd{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .cm-eval-name{font-size:13px;font-weight:700;color:var(--text)}
 .cm-result-chip{font-size:12px;font-weight:700;padding:2px 10px;border-radius:5px}
-.crp-pass{background:#E8F4EE;color:#1A6B3C;border:1px solid #A8D4BA}
+.crp-pass{background:#E6F2FB;color:#0068B0;border:1px solid #99C8E8}
 .crp-fail{background:#FBEAEA;color:#B83232;border:1px solid #E8B8B8}
 .cm-eval-ts{font-size:10px;color:var(--text3);margin-left:auto}
 .cm-comp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:8px}
@@ -177,7 +177,7 @@ const COMP = [
   {key:'마인드셋',label:'⑦ Mind Set'},
   {key:'전파코칭',label:'⑧ 전파/코칭'},
 ];
-const SCORE_COLORS = {5:'#1A6B3C',4:'#0068B0',3:'#7A5C00',2:'#8A4A00',1:'#B83232'};
+const SCORE_COLORS = {5:'#0068B0',4:'#00AEAE',3:'#5A6A7A',2:'#8A96A3',1:'#B83232'};
 const C = [
   {no:1,  id:'2600867',    name:'이성',   dept:'플랫폼코어팀',    cur:'잡매니저-어쏘',  tar:'잡매니저 멘토'},
   {no:2,  id:'2600871',    name:'이보미', dept:'플랫폼서비스팀',   cur:'잡매니저-어쏘',  tar:'잡매니저 멘토'},
@@ -264,9 +264,9 @@ function avg(reviews, key) {
 
 function barColor(v) {
   if(!v) return '#C5CDD8';
-  if(v >= 4.5) return '#1A6B3C';
-  if(v >= 3.5) return '#0068B0';
-  if(v >= 2.5) return '#7A5C00';
+  if(v >= 4.5) return '#0068B0';
+  if(v >= 3.5) return '#00AEAE';
+  if(v >= 2.5) return '#8A96A3';
   return '#B83232';
 }
 
@@ -329,7 +329,7 @@ function renderMatrix() {
     const p = rv.filter(r=>r.result==='합격').length;
     const f = rv.filter(r=>r.result==='불합격').length;
     return `<td style="padding:6px 4px;background:var(--bg3)">
-      ${p>0 ? `<div style="font-size:10px;color:#1A6B3C;font-weight:700">합격 ${p}</div>` : ''}
+      ${p>0 ? `<div style="font-size:10px;color:#0068B0;font-weight:700">합격 ${p}</div>` : ''}
       ${f>0 ? `<div style="font-size:10px;color:var(--red);font-weight:700">불합격 ${f}</div>` : ''}
       ${p===0&&f===0 ? '<div style="font-size:10px;color:var(--text3)">미제출</div>' : ''}
     </td>`;
