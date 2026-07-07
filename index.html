@@ -648,9 +648,12 @@ async function doLogin() {
     if(json.status === 'ok' && json.data.length > 0) {
       json.data.forEach(row => {
         const key = `${row.심의위원}:${row.사번}`;
-        // 시트 데이터가 더 최신이거나 로컬에 없으면 덮어씀
-        if(!reviews[key] || new Date(row.timestamp) >= new Date(reviews[key]?.timestamp||0)) {
-          reviews[key] = { result: row.결과, comment: row.평가의견, timestamp: row.timestamp };
+        if(new Date(row.timestamp) >= new Date(reviews[key]?.timestamp||0)) {
+          if(row.결과 === '__UNLOCK__') {
+            delete reviews[key]; // 관리자가 잠금 해제한 경우 → 재작성 가능 상태로 초기화
+          } else {
+            reviews[key] = { result: row.결과, comment: row.평가의견, timestamp: row.timestamp };
+          }
         }
       });
       saveState();
@@ -742,44 +745,31 @@ async function adminFetchAll() {
 function renderAdmin() {
   const content = document.getElementById('admin-content');
   content.innerHTML = C.map(c => {
-    const submitted = DEFAULT_CM
-      .map(name => ({ name, key:`${name}:${c.id}`, r: reviews[`${name}:${c.id}`] }))
-      .filter(x => x.r);
-    if(!submitted.length) return `
-      <div class="admin-cand-card">
-        <div class="admin-cand-hd">
-          <span class="acn">${c.no}. ${c.name}</span>
-          <span class="acd">${c.dept} · ${c.cur} → ${c.tar}</span>
-          <span style="margin-left:auto;font-size:11px;color:var(--text3)">제출 없음</span>
-        </div>
-      </div>`;
-    const rows = submitted.map(({name, key, r}) => {
-      const isEditing = adminEditKey === key;
+    const allCM = DEFAULT_CM.map(name => ({ name, key:`${name}:${c.id}`, r: reviews[`${name}:${c.id}`] }));
+    const submitted = allCM.filter(x => x.r);
+    const rows = allCM.map(({name, key, r}) => {
+      if(!r) return `
+        <div class="admin-rev-row">
+          <div><div class="arm-name">${name}</div></div>
+          <div><span style="font-size:11px;color:var(--text3)">미제출</span></div>
+          <div></div>
+          <div></div>
+        </div>`;
       const chip = r.result==='합격'
         ? `<span style="font-size:11px;color:#3fb950;font-weight:700">✓ 합격</span>`
         : `<span style="font-size:11px;color:var(--red);font-weight:700">✗ 불합격</span>`;
       const ts = new Date(r.timestamp).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-      if(isEditing) return `
-        <div class="admin-rev-row" style="grid-template-columns:150px 1fr">
-          <div><div class="arm-name">${name}</div><div style="font-size:11px;color:var(--text3)">${ts}</div></div>
-          <div class="admin-edit-area" style="border-radius:6px;margin:0">
-            <div class="admin-res-btns">
-              <button class="admin-res-btn ${r.result==='합격'?'sel-pass':''}" id="aeb-pass-${c.id.replace(/\W/g,'_')}" onclick="adminToggleResult('${key}','합격')">✅ 합격</button>
-              <button class="admin-res-btn ${r.result==='불합격'?'sel-fail':''}" id="aeb-fail-${c.id.replace(/\W/g,'_')}" onclick="adminToggleResult('${key}','불합격')">❌ 불합격</button>
-            </div>
-            <textarea class="admin-ta" id="admin-ta-${key.replace(/[\s:]/g,'_')}">${r.comment||''}</textarea>
-            <div>
-              <button class="admin-save-btn" onclick="adminSaveReview('${key}','${c.id}','${c.name}','${c.dept}','${name}','${c.cur}','${c.tar}')">저장</button>
-              <button class="admin-cancel-btn" onclick="adminEditKey=null;renderAdmin()">취소</button>
-            </div>
-          </div>
-        </div>`;
+      const safeKey = key.replace(/[\s:]/g,'__');
       return `
         <div class="admin-rev-row">
-          <div><div class="arm-name">${name}</div><div style="font-size:11px;color:var(--text3)">${ts}</div></div>
+          <div><div class="arm-name">${name}</div><div style="font-size:11px;color:var(--text3)">${ts} 제출</div></div>
           <div>${chip}</div>
           <div class="arm-comment">${r.comment||'(의견 없음)'}</div>
-          <div><button class="btn-admin-edit" onclick="adminEditKey='${key}';renderAdmin()">🔓 수정</button></div>
+          <div>
+            <button class="btn-admin-edit" onclick="adminUnlock('${safeKey}','${c.id}','${c.name}','${c.dept}','${name}','${c.cur}','${c.tar}')">
+              🔓 반려
+            </button>
+          </div>
         </div>`;
     }).join('');
     return `
@@ -787,43 +777,33 @@ function renderAdmin() {
         <div class="admin-cand-hd">
           <span class="acn">${c.no}. ${c.name}</span>
           <span class="acd">${c.dept} · ${c.cur} → ${c.tar}</span>
-          <span style="margin-left:auto;font-size:11px;color:var(--text3)">${submitted.length}명 제출</span>
+          <span style="margin-left:auto;font-size:11px;color:${submitted.length?'var(--text2)':'var(--text3)'}">
+            ${submitted.length}/${DEFAULT_CM.length}명 제출
+          </span>
         </div>
         ${rows}
       </div>`;
   }).join('');
 }
 
-function adminToggleResult(key, result) {
-  if(!reviews[key]) reviews[key]={};
-  reviews[key].result = result;
-  document.querySelectorAll(`[id^="aeb-pass-"], [id^="aeb-fail-"]`).forEach(b=>{
-    b.className = 'admin-res-btn';
-  });
-  const idSuffix = key.split(':')[1].replace(/\W/g,'_');
-  if(result==='합격') document.getElementById(`aeb-pass-${idSuffix}`)?.classList.add('sel-pass');
-  else document.getElementById(`aeb-fail-${idSuffix}`)?.classList.add('sel-fail');
-}
+async function adminUnlock(safeKey, cid, cname, cdept, cmName, cur, tar) {
+  const realKeyR = `${cmName}:${cid}`;
+  if(!confirm(`[${cmName}]의 [${cname}] 평가를 반려하시겠습니까?\n반려하면 해당 심의위원이 재작성할 수 있습니다.`)) return;
 
-async function adminSaveReview(key, cid, cname, cdept, cmName, cur, tar) {
-  if(!reviews[key]?.result) { showToast('합격/불합격을 먼저 선택하세요','err'); return; }
-  const taId = 'admin-ta-' + key.replace(/[\s:]/g,'_');
-  const comment = document.getElementById(taId)?.value || '';
-  reviews[key].comment = comment;
-  reviews[key].timestamp = new Date().toISOString();
+  delete reviews[realKeyR];
   saveState();
-  adminEditKey = null;
+
   try {
     const payload = {
-      timestamp: reviews[key].timestamp,
+      timestamp: new Date().toISOString(),
       심의위원: cmName, 사번: cid, 이름: cname, 소속: cdept,
       현재직무급: cur, 지원직무급: tar,
-      결과: reviews[key].result, 평가의견: comment,
+      결과: '__UNLOCK__', 평가의견: '',
       심의기수: '2026 하반기'
     };
     await fetch(SHEETS_URL, {method:'POST', mode:'no-cors', body:JSON.stringify(payload), headers:{'Content-Type':'application/json'}});
-    showToast('✅ 수정 완료 · Google Sheets 반영됨','ok');
-  } catch { showToast('로컬 저장 완료 (Sheets 연결 실패)','err'); }
+    showToast(`🔓 ${cmName} · ${cname} 평가 반려 완료 — 재작성 가능 상태로 전환됨`, 'ok');
+  } catch { showToast('로컬 반영 완료 (Sheets 연결 실패)','err'); }
   renderAdmin();
 }
 
