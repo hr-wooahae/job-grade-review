@@ -177,7 +177,7 @@ const COMP = [
   {key:'마인드셋',label:'⑦ Mind Set'},
   {key:'전파코칭',label:'⑧ 전파/코칭'},
 ];
-const SCORE_COLORS = {5:'#3fb950',4:'#58a6ff',3:'#d29922',2:'#f0883e',1:'#f85149'};
+const SCORE_COLORS = {5:'#1A6B3C',4:'#0068B0',3:'#7A5C00',2:'#8A4A00',1:'#B83232'};
 const C = [
   {no:1,  id:'2600867',    name:'이성',   dept:'플랫폼코어팀',    cur:'잡매니저-어쏘',  tar:'잡매니저 멘토'},
   {no:2,  id:'2600871',    name:'이보미', dept:'플랫폼서비스팀',   cur:'잡매니저-어쏘',  tar:'잡매니저 멘토'},
@@ -214,12 +214,12 @@ async function loadAll() {
   results.forEach((json, i) => {
     const name = DEFAULT_CM[i];
     if(json.status !== 'ok') {
-      diagLines.push(`<span style="color:#f85149">✗ ${name}: 오류 (status=${json.status||'network err'})</span>`);
+      diagLines.push(`<span style="color:#B83232">✗ ${name}: 오류 (status=${json.status||'network err'})</span>`);
       return;
     }
     anyOk = true;
     const validRows = json.data.filter(r => r.결과 !== '__UNLOCK__');
-    diagLines.push(`<span style="color:#3fb950">✓ ${name}: ${validRows.length}건 수신</span>` +
+    diagLines.push(`<span style="color:#1A6B3C">✓ ${name}: ${validRows.length}건 수신</span>` +
       (validRows.length ? ' → ' + validRows.map(r=>`[${r.이름||r.사번} ${r.결과}]`).join(' ') : ''));
     validRows.forEach(row => {
       const key = `${row.심의위원}:${row.사번}`;
@@ -263,11 +263,11 @@ function avg(reviews, key) {
 }
 
 function barColor(v) {
-  if(!v) return '#30363d';
-  if(v >= 4.5) return '#3fb950';
-  if(v >= 3.5) return '#58a6ff';
-  if(v >= 2.5) return '#d29922';
-  return '#f85149';
+  if(!v) return '#C5CDD8';
+  if(v >= 4.5) return '#1A6B3C';
+  if(v >= 3.5) return '#0068B0';
+  if(v >= 2.5) return '#7A5C00';
+  return '#B83232';
 }
 
 // ── SUMMARY ──────────────────────────────────────────────
@@ -329,7 +329,7 @@ function renderMatrix() {
     const p = rv.filter(r=>r.result==='합격').length;
     const f = rv.filter(r=>r.result==='불합격').length;
     return `<td style="padding:6px 4px;background:var(--bg3)">
-      ${p>0 ? `<div style="font-size:10px;color:#3fb950;font-weight:700">합격 ${p}</div>` : ''}
+      ${p>0 ? `<div style="font-size:10px;color:#1A6B3C;font-weight:700">합격 ${p}</div>` : ''}
       ${f>0 ? `<div style="font-size:10px;color:var(--red);font-weight:700">불합격 ${f}</div>` : ''}
       ${p===0&&f===0 ? '<div style="font-size:10px;color:var(--text3)">미제출</div>' : ''}
     </td>`;
@@ -435,16 +435,16 @@ function renderDetail() {
           labels: COMP.map(c=>c.label),
           datasets:[{
             data: avgVals,
-            backgroundColor:'rgba(88,166,255,0.12)',
-            borderColor:'#58a6ff',
+            backgroundColor:'rgba(0,104,176,0.08)',
+            borderColor:'#0068B0',
             pointBackgroundColor: avgVals.map(v=>barColor(v)),
             pointRadius:3, borderWidth:2,
           }]
         },
         options:{
-          scales:{r:{min:0,max:5,ticks:{stepSize:1,color:'#6e7681',font:{size:9}},
-            grid:{color:'#30363d'},angleLines:{color:'#30363d'},
-            pointLabels:{color:'#8b949e',font:{size:9}}}},
+          scales:{r:{min:0,max:5,ticks:{stepSize:1,color:'#8A96A3',font:{size:9}},
+            grid:{color:'#DDE1E7'},angleLines:{color:'#DDE1E7'},
+            pointLabels:{color:'#5A6A7A',font:{size:9}}}},
           plugins:{legend:{display:false}},
           responsive:true,maintainAspectRatio:true,
         }

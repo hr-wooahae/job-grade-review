@@ -293,7 +293,7 @@ tbody td{padding:10px 12px;vertical-align:middle;white-space:nowrap}
     <div class="user-pill"><div class="online-dot" id="hd-dot"></div><span id="hd-user">-</span></div>
     <button class="hd-btn" id="hd-btn-results" onclick="gotoView('results')">내 평가 현황</button>
     <a href="results.html" target="_blank" id="hd-btn-dashboard" class="hd-btn" style="text-decoration:none;color:inherit;display:none">📊 결과 대시보드</a>
-    <button class="hd-btn" id="hd-btn-admin" onclick="gotoView('admin')" style="display:none;color:#f85149">🔑 관리자</button>
+    <button class="hd-btn" id="hd-btn-admin" onclick="gotoView('admin')" style="display:none;color:var(--red)">🔑 관리자</button>
     <button class="hd-btn" id="hd-btn-settings" onclick="gotoView('settings')" style="display:none">⚙ 설정</button>
     <button class="hd-btn" onclick="logout()">로그아웃</button>
   </div>
@@ -310,7 +310,7 @@ tbody td{padding:10px 12px;vertical-align:middle;white-space:nowrap}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
       평가
     </button>
-    <button class="nav-btn" id="nav-admin" onclick="gotoView('admin')" title="관리자" style="display:none;color:#f85149">
+    <button class="nav-btn" id="nav-admin" onclick="gotoView('admin')" title="관리자" style="display:none;color:var(--red)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
       관리자
     </button>
@@ -370,7 +370,7 @@ tbody td{padding:10px 12px;vertical-align:middle;white-space:nowrap}
   <div class="main" id="admin-view" style="display:none">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
       <h2 style="font-size:16px">🔑 관리자 — 전체 평가 내역</h2>
-      <span style="font-size:11px;background:#3d1f1f;color:#f85149;border:1px solid #6e2929;padding:2px 8px;border-radius:20px;font-weight:600">ADMIN</span>
+      <span style="font-size:11px;background:#FBEAEA;color:#B83232;border:1px solid #E8B8B8;padding:2px 8px;border-radius:20px;font-weight:600">ADMIN</span>
       <button onclick="adminFetchAll()" style="margin-left:auto;background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px">🔄 새로고침</button>
     </div>
     <div id="admin-content"></div>
@@ -556,7 +556,7 @@ const C = [
 // ═══════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════
-const COLORS = ['#58a6ff','#bc8cff','#3fb950','#d29922','#f85149','#f0883e'];
+const COLORS = ['#0068B0','#00AEAE','#1A6B3C','#7A5C00','#B83232','#5A4A9E'];
 const DEFAULT_CM = ['이봉호 본부장','박우진 본부장','전기민 실장','정유정 사업부장','박지강 소장','임승욱 실장'];
 const CM_PW = {'이봉호 본부장':'1221715','박우진 본부장':'1025623','전기민 실장':'1030315','정유정 사업부장':'2037114','박지강 소장':'1036932','임승욱 실장':'1057411'};
 
@@ -574,7 +574,7 @@ const COMPETENCIES = [
   {key:'전파코칭', label:'⑧ 전파/코칭', desc:'동료들에게 본인의 성공 경험과 노하우를 전파하고 코칭함으로써, 이들의 역량향상을 이끌어내어 상호 업무를 교류할 수 있게 한다.'},
 ];
 const SCORE_LABELS = {5:'매우 그렇다',4:'그렇다',3:'보통이다',2:'그렇지 않다',1:'전혀 그렇지 않다'};
-const SCORE_COLORS = {5:'#3fb950',4:'#58a6ff',3:'#d29922',2:'#f0883e',1:'#f85149'};
+const SCORE_COLORS = {5:'#1A6B3C',4:'#0068B0',3:'#7A5C00',2:'#8A4A00',1:'#B83232'};
 let currentUser = null, openIdx = null, filterMode = 'all';
 const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzRG1lvhtNxC9gzj7ZwOvr7DDMjXqQ_uWo2jKzyYu9hZ781ZiTfhMkq_tmjZz70IVSLNQ/exec';
 let reviews = {}, committee = [], sheetsUrl = SHEETS_URL;
@@ -603,9 +603,9 @@ function evalClass(e) {
   return 'ev-dash';
 }
 function fbColor(v) {
-  if(v===null||v===undefined) return '#374151';
-  if(v>=90) return '#3fb950'; if(v>=75) return '#58a6ff';
-  if(v>=60) return '#d29922'; return '#f85149';
+  if(v===null||v===undefined) return '#C5CDD8';
+  if(v>=90) return '#1A6B3C'; if(v>=75) return '#0068B0';
+  if(v>=60) return '#7A5C00'; return '#B83232';
 }
 function noteChip(n, exit) {
   if(exit) return `<span class="note-chip nc-exit">퇴사</span>`;
@@ -747,7 +747,7 @@ async function doAdminLogin() {
   document.getElementById('app-header').style.display='flex';
   document.getElementById('app-body').style.display='flex';
   document.getElementById('hd-user').textContent = '🔑 관리자';
-  document.getElementById('hd-dot').style.background='#f85149';
+  document.getElementById('hd-dot').style.background='#B83232';
   document.getElementById('hd-btn-admin').style.display='';
   document.getElementById('hd-btn-results').style.display='none';
   document.getElementById('hd-btn-dashboard').style.display='';
@@ -808,8 +808,8 @@ function renderAdmin() {
         html += '<td style="text-align:center;padding:8px 4px;border-left:1px solid var(--border)"><span style="color:var(--text3);font-size:12px">—</span></td>';
       } else {
         const isPass = r.result === '합격';
-        const bg = isPass ? '#0a1f12' : '#1f0a0a';
-        const color = isPass ? '#3fb950' : '#f85149';
+        const bg = isPass ? '#EEF8F2' : '#FDF0F0';
+        const color = isPass ? '#1A6B3C' : '#B83232';
         const mark = isPass ? '✓ 합격' : '✗ 불합격';
         const ts = r.timestamp ? new Date(r.timestamp).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
         html += '<td style="text-align:center;padding:6px 4px;border-left:1px solid var(--border);background:' + bg + '">'
@@ -833,9 +833,9 @@ function renderAdmin() {
     const pass = DEFAULT_CM.filter(n => reviews[n+':'+c.id]?.result==='합격').length;
     const fail = DEFAULT_CM.filter(n => reviews[n+':'+c.id]?.result==='불합격').length;
     html += '<td style="text-align:center;padding:7px 4px;background:var(--bg3);font-size:11px;border-left:1px solid var(--border)">'
-          + '<span style="color:#3fb950;font-weight:700">' + pass + '합</span>'
+          + '<span style="color:#1A6B3C;font-weight:700">' + pass + '합</span>'
           + '<span style="color:var(--text3)"> / </span>'
-          + '<span style="color:#f85149;font-weight:700">' + fail + '불</span>'
+          + '<span style="color:#B83232;font-weight:700">' + fail + '불</span>'
           + '</td>';
   });
   html += '</tr></tfoot></table></div>';
