@@ -862,7 +862,7 @@ async function adminUnlock(safeKey, cid, cname, cdept, cmName, cur, tar) {
       결과: '__UNLOCK__', 평가의견: '',
       심의기수: '2026 하반기'
     };
-    await fetch(SHEETS_URL, {method:'POST', mode:'no-cors', body:JSON.stringify(payload), headers:{'Content-Type':'application/json'}});
+    await fetch(SHEETS_URL, {method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload)});
     showToast(`🔓 ${cmName} · ${cname} 평가 반려 완료 — 재작성 가능 상태로 전환됨`, 'ok');
   } catch { showToast('로컬 반영 완료 (Sheets 연결 실패)','err'); }
   renderAdmin();
@@ -1170,9 +1170,11 @@ async function submitReview(idx) {
       역량_마인드셋: scores.마인드셋||'', 역량_전파코칭: scores.전파코칭||''
     };
     try {
-      await fetch(sheetsUrl, {method:'POST', mode:'no-cors', body:JSON.stringify(payload), headers:{'Content-Type':'application/json'}});
-      showToast('✅ 저장 완료 · Google Sheets 전송됨','ok');
-    } catch { showToast('로컬 저장 완료 (Sheets 연결 실패)','err'); }
+      const res = await fetch(sheetsUrl, {method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload)});
+      const json = await res.json().catch(()=>({}));
+      if(json.status === 'ok') showToast('✅ 저장 완료 · Google Sheets 전송됨','ok');
+      else showToast('⚠️ 저장됐으나 응답 확인 실패','err');
+    } catch(e) { showToast('로컬 저장 완료 (Sheets 연결 실패: '+e.message+')','err'); }
   } else {
     showToast('✅ 로컬 저장 완료','ok');
   }
