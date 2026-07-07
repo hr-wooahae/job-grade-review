@@ -643,8 +643,7 @@ function initLogin() {
     btn.className = 'mbtn';
     const myPass = C.filter(c => reviews[`${name}:${c.id}`]?.result==='합격').length;
     const myFail = C.filter(c => reviews[`${name}:${c.id}`]?.result==='불합격').length;
-    btn.innerHTML = `<div class="av" style="background:${COLORS[i]}">${name[0]}</div>
-      <div><div class="mn">${name}</div><div class="mr">합격${myPass} / 불합격${myFail} / 미완료${C.length-myPass-myFail}</div></div>`;
+    btn.innerHTML = `<div><div class="mn">${name}</div><div class="mr">합격${myPass} / 불합격${myFail} / 미완료${C.length-myPass-myFail}</div></div>`;
     btn.onclick = () => {
       document.querySelectorAll('.mbtn').forEach(b=>b.classList.remove('sel'));
       btn.classList.add('sel'); currentUser=name;
