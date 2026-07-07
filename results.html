@@ -194,18 +194,17 @@ async function loadAll() {
   document.getElementById('detail-grid').innerHTML = '';
   allReviews = {};
 
-  const json = await fetch(SHEETS_URL)
-    .then(r => r.json()).catch(() => ({status:'err', data:[], _fetchFailed:true}));
+  const results = await Promise.all(
+    DEFAULT_CM.map(name =>
+      fetch(SHEETS_URL + '?user=' + encodeURIComponent(name) + '&t=' + Date.now())
+        .then(r => r.json()).catch(() => ({status:'err', data:[]}))
+    )
+  );
 
-  if(json._fetchFailed) {
-    document.getElementById('matrix-container').innerHTML =
-      '<div style="padding:24px;color:var(--red);font-size:13px">⚠️ Google Sheets 연결 실패 — Apps Script URL 또는 배포 상태를 확인하세요.</div>';
-    document.getElementById('summary-bar').innerHTML =
-      '<div style="color:var(--red);font-size:12px;padding:8px">데이터 로드 실패</div>';
-    return;
-  }
-
-  if(json.status === 'ok') {
+  let anyOk = false;
+  results.forEach(json => {
+    if(json.status !== 'ok') return;
+    anyOk = true;
     json.data.forEach(row => {
       if(row.결과 === '__UNLOCK__') return;
       const key = `${row.심의위원}:${row.사번}`;
@@ -218,6 +217,14 @@ async function loadAll() {
         };
       }
     });
+  });
+
+  if(!anyOk) {
+    document.getElementById('matrix-container').innerHTML =
+      '<div style="padding:24px;color:var(--red);font-size:13px">⚠️ Google Sheets 연결 실패 — Apps Script 배포 상태를 확인하세요.</div>';
+    document.getElementById('summary-bar').innerHTML =
+      '<div style="color:var(--red);font-size:12px;padding:8px">데이터 로드 실패</div>';
+    return;
   }
 
   const tsVal = '업데이트 ' + new Date().toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
