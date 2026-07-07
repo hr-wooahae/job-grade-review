@@ -177,6 +177,8 @@ tbody td{padding:10px 12px;vertical-align:middle;white-space:nowrap}
 .rbtn.fail:hover,.rbtn.fail.sel{border-color:var(--red);background:#2a0d0d;color:var(--red)}
 .eval-ta{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;padding:10px;min-height:90px;resize:vertical;font-family:inherit;line-height:1.6}
 .eval-ta:focus{outline:none;border-color:var(--accent)}
+.eval-ta:disabled{opacity:0.35;cursor:not-allowed;resize:none}
+.btn-submit:disabled{opacity:0.4;cursor:not-allowed}
 .form-row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:8px}
 .btn-submit{background:var(--accent);color:#0d1117;border:none;border-radius:7px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer}
 .btn-submit:hover{background:#79c0ff}
@@ -787,21 +789,41 @@ function renderDetail(idx) {
 
     <div class="dp-section">
       <h4>심의위원 평가</h4>
-      <div class="eval-form">
-        <h4>✏️ ${currentUser} 님의 평가</h4>
-        <div class="result-btns">
-          <button class="rbtn pass ${myR.result==='합격'?'sel':''}" onclick="setMyResult('합격',${idx})">✅ 합격</button>
-          <button class="rbtn fail ${myR.result==='불합격'?'sel':''}" onclick="setMyResult('불합격',${idx})">❌ 불합격</button>
-        </div>
-        <div style="margin-bottom:6px">
-          <span style="font-size:11px;color:var(--text2)">평가의견</span>
-        </div>
-        <textarea class="eval-ta" id="ta-${idx}" placeholder="발표를 청취 후 평가의견을 작성해 주세요...">${myR.comment||''}</textarea>
-        <div class="form-row">
-          <button class="btn-submit" onclick="submitReview(${idx})">저장 · 제출</button>
-          <span class="form-hint">${myR.timestamp?'저장: '+new Date(myR.timestamp).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'미제출'}</span>
-        </div>
-      </div>
+      ${(()=>{
+        const isLocked = !!myR.timestamp;
+        const hasResult = !!myR.result;
+        if(isLocked) return `
+        <div class="eval-form">
+          <h4>✏️ ${currentUser} 님의 평가 <span style="font-size:11px;color:#3fb950;font-weight:400;margin-left:6px">🔒 제출 완료</span></h4>
+          <div class="result-btns" style="pointer-events:none">
+            <button class="rbtn pass ${myR.result==='합격'?'sel':''}" disabled>✅ 합격</button>
+            <button class="rbtn fail ${myR.result==='불합격'?'sel':''}" disabled>❌ 불합격</button>
+          </div>
+          <div style="margin-bottom:6px"><span style="font-size:11px;color:var(--text2)">평가의견</span></div>
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:10px 12px;font-size:13px;color:var(--text1);min-height:72px;white-space:pre-wrap;line-height:1.6">${myR.comment||'(의견 없음)'}</div>
+          <div class="form-row" style="margin-top:10px">
+            <span style="font-size:12px;color:#3fb950">🔒 제출 완료 · 수정 불가</span>
+            <span class="form-hint">저장: ${new Date(myR.timestamp).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</span>
+          </div>
+        </div>`;
+        return `
+        <div class="eval-form">
+          <h4>✏️ ${currentUser} 님의 평가</h4>
+          <div class="result-btns">
+            <button class="rbtn pass ${myR.result==='합격'?'sel':''}" onclick="setMyResult('합격',${idx})">✅ 합격</button>
+            <button class="rbtn fail ${myR.result==='불합격'?'sel':''}" onclick="setMyResult('불합격',${idx})">❌ 불합격</button>
+          </div>
+          <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px">
+            <span style="font-size:11px;color:var(--text2)">평가의견</span>
+            ${!hasResult?'<span style="font-size:11px;color:var(--accent)">← 먼저 합격/불합격을 선택하세요</span>':''}
+          </div>
+          <textarea class="eval-ta" id="ta-${idx}" placeholder="발표를 청취 후 평가의견을 작성해 주세요..." ${!hasResult?'disabled':''}>${myR.comment||''}</textarea>
+          <div class="form-row">
+            <button class="btn-submit" onclick="submitReview(${idx})" ${!hasResult?'disabled':''}>저장 · 제출</button>
+            <span class="form-hint">미제출</span>
+          </div>
+        </div>`;
+      })()}
     </div>
   `;
 }
@@ -814,6 +836,7 @@ function closePanel() {
 
 function setMyResult(result, idx) {
   const key = `${currentUser}:${C[idx].id}`;
+  if(reviews[key]?.timestamp) { showToast('이미 제출된 평가는 수정할 수 없습니다','err'); return; }
   if(!reviews[key]) reviews[key]={};
   reviews[key].result = result;
   saveState();
