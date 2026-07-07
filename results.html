@@ -177,7 +177,7 @@ const COMP = [
   {key:'마인드셋',label:'⑦ Mind Set'},
   {key:'전파코칭',label:'⑧ 전파/코칭'},
 ];
-const SCORE_COLORS = {5:'#0068B0',4:'#00AEAE',3:'#5A6A7A',2:'#8A96A3',1:'#B83232'};
+const SCORE_COLORS = {5:'#0068B0',4:'#0068B0',3:'#0068B0',2:'#5A6A7A',1:'#B83232'};
 const C = [
   {no:1,  id:'2600867',    name:'이성',   dept:'플랫폼코어팀',    cur:'잡매니저-어쏘',  tar:'잡매니저 멘토'},
   {no:2,  id:'2600871',    name:'이보미', dept:'플랫폼서비스팀',   cur:'잡매니저-어쏘',  tar:'잡매니저 멘토'},
@@ -264,9 +264,7 @@ function avg(reviews, key) {
 
 function barColor(v) {
   if(!v) return '#C5CDD8';
-  if(v >= 4.5) return '#0068B0';
-  if(v >= 3.5) return '#00AEAE';
-  if(v >= 2.5) return '#8A96A3';
+  if(v >= 2) return '#0068B0';
   return '#B83232';
 }
 
