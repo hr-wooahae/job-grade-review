@@ -786,7 +786,13 @@ function renderAdmin() {
     C.forEach(c => {
       const r = reviews[name+':'+c.id];
       if(!r || r.result === '__UNLOCK__') {
-        html += '<td style="text-align:center;padding:8px 4px;border-left:1px solid var(--border)"><span style="color:var(--text3);font-size:12px">—</span></td>';
+        html += '<td style="text-align:center;padding:6px 4px;border-left:1px solid var(--border)">'
+              + '<span style="color:var(--text3);font-size:12px;display:block;margin-bottom:3px">—</span>'
+              + '<button class="btn-admin-edit" style="font-size:10px;opacity:0.5"'
+              + ' data-cid="' + c.id + '" data-cname="' + c.name + '" data-cdept="' + c.dept + '"'
+              + ' data-cmname="' + name + '" data-cur="' + c.cur + '" data-tar="' + c.tar + '"'
+              + ' onclick="adminUnlockBtn(this)">🔓 초기화</button>'
+              + '</td>';
       } else {
         const isPass = r.result === '합격';
         const bg = isPass ? '#EEF4FB' : '#FDF0F0';
