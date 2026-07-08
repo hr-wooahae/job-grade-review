@@ -220,13 +220,18 @@ async function loadAll() {
     const validRows = json.data.filter(r => r.결과 !== '__UNLOCK__');
     diagLines.push(`<span style="color:#1A6B3C">✓ ${name}: ${validRows.length}건 수신</span>` +
       (validRows.length ? ' → ' + validRows.map(r=>`[${r.이름||r.사번} ${r.결과}]`).join(' ') : ''));
-    validRows.forEach(row => {
+    // 모든 행(UNLOCK 포함) 타임스탬프 순으로 처리 — 반려가 최신이면 해당 평가 삭제
+    json.data.forEach(row => {
       const key = `${row.심의위원}:${row.사번}`;
       if(!allReviews[key] || new Date(row.timestamp) >= new Date(allReviews[key]?.timestamp||0)) {
-        allReviews[key] = {
-          result: row.결과, comment: row.평가의견,
-          timestamp: row.timestamp, reviewer: row.심의위원
-        };
+        if(row.결과 === '__UNLOCK__') {
+          delete allReviews[key]; // 반려 처리 — 결과 대시보드에서 제거
+        } else {
+          allReviews[key] = {
+            result: row.결과, comment: row.평가의견,
+            timestamp: row.timestamp, reviewer: row.심의위원
+          };
+        }
       }
     });
   });
