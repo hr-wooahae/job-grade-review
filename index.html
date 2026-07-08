@@ -1105,28 +1105,44 @@ async function submitReview(idx) {
   if(reviews[key]?.timestamp) { showToast('이미 제출된 평가입니다','err'); return; }
   const comment = document.getElementById(`ta-${idx}`)?.value || '';
   if(!reviews[key]?.result) { showToast('합격/불합격을 먼저 선택해 주세요','err'); return; }
-  reviews[key].comment = comment;
-  reviews[key].timestamp = new Date().toISOString();
-  saveState();
 
-  if(sheetsUrl) {
-    const payload = {
-      timestamp: reviews[key].timestamp,
-      심의위원: currentUser,
-      사번: c.id, 이름: c.name, 소속: c.dept,
-      현재직무급: c.cur, 지원직무급: c.tar,
-      결과: reviews[key].result, 평가의견: comment,
-      심의기수: '2026 하반기'
-    };
-    try {
-      const res = await fetch(sheetsUrl, {method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload)});
-      const json = await res.json().catch(()=>({}));
-      if(json.status === 'ok') showToast('✅ 저장 완료 · Google Sheets 전송됨','ok');
-      else showToast('⚠️ 저장됐으나 응답 확인 실패','err');
-    } catch(e) { showToast('로컬 저장 완료 (Sheets 연결 실패: '+e.message+')','err'); }
-  } else {
-    showToast('✅ 로컬 저장 완료','ok');
+  // 제출 버튼 비활성화 (중복 클릭 방지)
+  const btn = document.querySelector('#dp-inner .btn-submit');
+  if(btn) { btn.disabled = true; btn.textContent = '전송 중...'; }
+
+  const ts = new Date().toISOString();
+  const payload = {
+    timestamp: ts,
+    심의위원: currentUser,
+    사번: c.id, 이름: c.name, 소속: c.dept,
+    현재직무급: c.cur, 지원직무급: c.tar,
+    결과: reviews[key].result, 평가의견: comment,
+    심의기수: '2026 하반기'
+  };
+
+  // Sheets 전송 먼저 — 성공해야 잠금
+  try {
+    const res = await fetch(sheetsUrl, {method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload)});
+    const json = await res.json().catch(()=>({}));
+    if(json.status === 'ok') {
+      // 전송 성공 → 로컬 잠금
+      reviews[key].comment = comment;
+      reviews[key].timestamp = ts;
+      saveState();
+      showToast('✅ 저장 완료 · Google Sheets 전송됨','ok');
+    } else {
+      // 서버 오류 → 잠금 안 함, 재시도 가능
+      if(btn) { btn.disabled = false; btn.textContent = '저장 · 제출'; }
+      showToast('⚠️ 전송 실패 — 다시 시도해 주세요','err');
+      return;
+    }
+  } catch(e) {
+    // 네트워크 오류 → 잠금 안 함, 재시도 가능
+    if(btn) { btn.disabled = false; btn.textContent = '저장 · 제출'; }
+    showToast('⚠️ 네트워크 오류 — 다시 시도해 주세요','err');
+    return;
   }
+
   renderDetail(idx);
   renderStats();
   renderTable();
