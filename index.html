@@ -1102,6 +1102,7 @@ function setMyScore(idx, compKey, score) {
 
 async function submitReview(idx) {
   const c = C[idx], key = `${currentUser}:${c.id}`;
+  if(reviews[key]?.timestamp) { showToast('이미 제출된 평가입니다','err'); return; }
   const comment = document.getElementById(`ta-${idx}`)?.value || '';
   if(!reviews[key]?.result) { showToast('합격/불합격을 먼저 선택해 주세요','err'); return; }
   reviews[key].comment = comment;
